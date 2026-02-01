@@ -19,12 +19,7 @@ Write a **formal, normative specification** for AICL.
 - Do **not** rely on any external runtime, tooling, compiler, or validator unless explicitly permitted by the intent document.
 
 ### Core requirements
-The specification MUST define all rules required to satisfy the intent document, including:
-- determinism (behavior-level)
-- refusal vs error semantics
-- scope of enforcement (internal reasoning + external outputs)
-- assumption handling rules
-
+The specification MUST define all rules required to satisfy the intent document, 
 The specification MUST be **complete, internally consistent, and end-user usable**.
 
 ---

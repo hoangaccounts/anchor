@@ -1,5 +1,19 @@
 # AI Contract Language (AICL)
 
+
+## Normative Constraints (Authoritative)
+
+The following requirements are binding and non-negotiable. Any derived AICL specification MUST satisfy them:
+
+- The specification MUST be end-user-usable: it MUST enable an end user to author, activate, and rely on an AICL contract using the specification alone.
+- The contract MUST be deterministic at the behavior level: given the same contract, input, and declared phase, enforcement outcomes MUST be identical (ALLOW vs REFUSE vs ERROR), though wording MAY vary.
+- The contract MUST define explicit refusal vs error semantics: refusals indicate lack of permission; errors indicate invalid or inconsistent state and MUST halt the current turn.
+- The contract MUST define a closed permission model: any behavior not explicitly permitted MUST be refused; permission MUST NOT be inferred.
+- Enforcement MUST apply to outputs as well as internal reasoning, planning, and sequencing.
+- Unstated assumptions MUST NOT be relied upon; missing required details MUST be surfaced explicitly.
+- The language MUST support explicit in-session user directives to activate, replace, or terminate contracts and set phase, which MUST be unambiguous and MUST NOT execute on near-miss text.
+
+
 **A deterministic contract language for AI systems**
 
 Status: Core philosophy stable, implementation intentionally omitted
