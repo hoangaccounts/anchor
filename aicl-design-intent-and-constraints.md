@@ -235,3 +235,23 @@ Especially valuable feedback:
 ## Author
 
 [Your details here]
+
+## In-Session Explicit Control (Directive Surface)
+
+AICL MUST support an explicit, deterministic mechanism for the user to modify session constraints during an active session without relying on external tooling.
+
+Non-negotiable constraints:
+
+- The user MUST be able to explicitly perform, within the chat session:
+  - activate a contract
+  - replace the active contract
+  - terminate the active contract
+  - set or change the declared phase (if phases exist in the language)
+- The mechanism MUST be unambiguous and MUST NOT be triggered implicitly.
+- The mechanism MUST be strictly distinguishable from ordinary user requests via a machine-checkable sentinel pattern (e.g., a leading `/`).
+- Near-miss text (e.g., missing the sentinel) MUST NOT execute. The assistant MAY warn or suggest the correct form, but MUST NOT perform the state change unless the exact directive form is used.
+- Directive parsing and handling MUST occur before ordinary request classification and enforcement.
+- Directives MUST ONLY affect in-session AICL state (active contract, phase, or other AICL-defined state) and MUST NOT imply OS/web/CLI execution.
+
+
+
