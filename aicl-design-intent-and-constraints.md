@@ -87,6 +87,9 @@ Everything else is downstream.
 A valid derivation of AICL MUST result in a complete, self-contained system
 that is directly usable by an end user.
 
+All information required for an end user to author, activate, and apply an AICL
+contract MUST be defined within the derived specification itself.
+
 Outputs that define only meta-rules, conceptual contracts, or partial frameworks
 without specifying a concrete, usable language SHALL be considered incomplete.
 
