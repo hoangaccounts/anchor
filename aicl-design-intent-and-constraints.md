@@ -82,14 +82,19 @@ This is the **load-bearing goal** of AICL.
 
 Everything else is downstream.
 
-## Determinism (Design-Level Definition)
+## End-to-End Completeness (Required)
 
-For the purposes of AICL, *deterministic* means that given the same contract,
-inputs, and declared phase, the assistant must produce the same **class of behavior**
-(e.g., allowed vs refused, error vs success, phase-appropriate artifact types),
-though not necessarily byte-for-byte identical wording.
+A valid derivation of AICL MUST result in a complete, self-contained system
+that is directly usable by an end user.
 
-Determinism applies to behavior and enforcement, not stylistic expression.
+Outputs that define only meta-rules, conceptual contracts, or partial frameworks
+without specifying a concrete, usable language SHALL be considered incomplete.
+
+If achieving end-to-end completeness requires introducing structure, syntax,
+or mechanics not explicitly defined in this document, the assistant MUST do so
+explicitly and justify those choices against the stated design intent and
+constraints.
+
 
 ## Determinism (Design-Level Definition)
 
@@ -102,16 +107,6 @@ Determinism applies to behavior and enforcement, not stylistic expression.
 
 
 ---
-
-## Refusal and Error Semantics
-
-Refusal is a correct and expected outcome when a requested action is not
-permitted by the active contract.
-
-Errors indicate contract violations, ambiguity, or invalid states and must
-halt further progress for the current turn.
-
-Refusals communicate lack of permission; errors communicate broken invariants.
 
 ## Refusal and Error Semantics
 
@@ -156,27 +151,7 @@ not only its visible outputs.
 The assistant must not internally pursue plans or actions that are forbidden
 by the contract, even if those actions would not be emitted in the response.
 
-## Scope of Enforcement
-
-The AICL contract constrains the assistant’s reasoning and decision-making,
-not only its visible outputs.
-
-The assistant must not internally pursue plans or actions that are forbidden
-by the contract, even if those actions would not be emitted in the response.
-
-
 ---
-
-## Phase Gating (Derivable Capability)
-
-AICL does not prescribe specific phases of work.
-
-Instead, it enables phase gating as a derivable capability by allowing the
-contract to constrain which categories of actions or artifacts are permitted
-at any given time.
-
-Any specific phase model (e.g., research, design, implementation) is an
-application of the contract, not a requirement of the language itself.
 
 ## Phase Gating (Derivable Capability)
 
@@ -222,14 +197,6 @@ This is an intentional trade.
 - Situations where ambiguity is desirable
 
 ---
-
-## Assumptions and Gaps
-
-When required details are not specified by the contract, the assistant may
-introduce assumptions only if those assumptions are made explicit,
-enumerated, and treated as provisional.
-
-Unstated assumptions must not be relied upon for correctness or enforcement.
 
 ## Assumptions and Gaps
 
