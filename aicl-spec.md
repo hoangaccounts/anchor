@@ -5,9 +5,49 @@ Modules MAY extend actions/commands/profiles/rules without changing this core.
 
 ---
 
+## 0. Encoding and File Structure (v0.1)
+
+### 0.1 Fixed block markers
+- A serialized AICL artifact MUST use only the following block markers:
+  - `[[MODULE]]` ... `[[/MODULE]]`
+  - `[[CONTRACT]]` ... `[[/CONTRACT]]`
+- A file MAY contain one or more `[[MODULE]]` blocks.
+- Text outside `[[MODULE]]` blocks MUST be ignored by the runtime and MUST be ignored by validators unless a tool explicitly declares otherwise.
+
+### 0.2 Module envelope rules
+- `[[MODULE]]` blocks MUST contain:
+  - Module metadata lines (`module_id`, `module_version`, `module_namespace`, optional `description`), AND
+  - one or more `[[CONTRACT]]` blocks.
+- `[[MODULE]]` blocks MUST NOT contain any other top-level content besides the metadata lines and `[[CONTRACT]]` blocks.
+- Within a single file, `module_namespace` values MUST be unique; duplicates MUST produce `ERROR`.
+
+### 0.3 Contract encoding rules (YAML only)
+- Each `[[CONTRACT]]` block body MUST be exactly one YAML document that encodes a single Contract per the canonical schema.
+- The YAML encoding MUST use a restricted YAML 1.2 subset:
+  - mappings, sequences, and scalars (string, boolean, integer) only
+  - MUST NOT use anchors, aliases, merge keys, tags, or multi-document markers (`---`)
+- A validator MUST treat any violation of these encoding rules as `FAIL`.
+
+---
+
 ## 1. Domain Objects (Canonical Schemas)
 
-### 1.1 Contract
+### 1.1 Module
+**Fields**
+- `module_id: string` (required)
+- `module_version: string` (required)
+- `module_namespace: string` (required; unique within a loaded file)
+- `description: string` (optional)
+- `contracts: Contract[]` (required; one or more)
+
+**Invariants**
+- `module_id` MUST be non-empty.
+- `module_namespace` MUST be non-empty.
+- Duplicate `module_namespace` among loaded modules MUST produce `ERROR`.
+
+---
+
+### 1.2 Contract
 **Fields**
 - `contract_id: string` (required; unique within a loaded file)
 - `version: string` (required)
@@ -25,7 +65,7 @@ Modules MAY extend actions/commands/profiles/rules without changing this core.
 
 ---
 
-### 1.2 Rule
+### 1.3 Rule
 **Fields**
 - `rule_id: string` (required; unique within its contract)
 - `effect: "ALLOW" | "DENY" | "REQUIRE"` (required)
@@ -41,7 +81,7 @@ Modules MAY extend actions/commands/profiles/rules without changing this core.
 
 ---
 
-### 1.3 Action
+### 1.4 Action
 **Fields**
 - `action_id: string` (required; unique across loaded modules/contracts)
 - `kind: "read_only" | "change_existing" | "create_new" | "contract_state"` (required)
@@ -58,7 +98,7 @@ Modules MAY extend actions/commands/profiles/rules without changing this core.
 
 ---
 
-### 1.4 Command
+### 1.5 Command
 **Fields**
 - `command_id: string` (required; unique within its contract/module)
 - `directive_name: string` (required; the `/name(...)` token)
@@ -80,7 +120,7 @@ Modules MAY extend actions/commands/profiles/rules without changing this core.
 
 ---
 
-### 1.5 Directive
+### 1.6 Directive
 **Fields**
 - `raw_text: string` (required)
 - `directive_name: string` (required)
@@ -106,17 +146,19 @@ If not satisfied, the message MUST NOT be treated as a directive and MUST NOT ch
   - Assistant MAY provide gentle corrective feedback.
 
 ---
-## 1.8 Directive Namespacing and Resolution (v0.1)
+## 1.9 Directive Namespacing and Resolution (v0.1)
 
 ### Namespaced directive form
 - A directive MAY use an optional namespace prefix: `/ns.name(...)`.
-- `ns` SHOULD match a `contract_id`.
+- `ns` SHOULD match a loaded module's `module_namespace`.
 
 ### Resolution rules (deterministic)
 If a directive is namespaced:
-- The system MUST resolve the command only within the contract identified by `ns`.
-- If `ns` does not identify a loaded contract, the system MUST `ERROR` with `UNKNOWN_CONTRACT`.
-- If the contract exists but does not define `name`, the system MUST `ERROR` with `UNKNOWN_COMMAND`.
+- The system MUST resolve the command only within the module identified by `ns`.
+- If `ns` does not identify a loaded module namespace, the system MUST `ERROR` with `UNKNOWN_MODULE`.
+- If the module contains zero **active** contracts that define `name`, the system MUST `ERROR` with `UNKNOWN_COMMAND`.
+- If the module contains exactly one **active** contract that defines `name`, the system MUST resolve to that command.
+- If the module contains more than one **active** contract that define `name`, the system MUST `ERROR` with `AMBIGUOUS_COMMAND`.
 
 If a directive is not namespaced:
 - If exactly one **active** contract defines `name`, the system MUST resolve to that command.
@@ -125,7 +167,7 @@ If a directive is not namespaced:
 
 ---
 
-### 1.6 Scope
+### 1.7 Scope
 **Fields**
 - `scope_id: string` (required)
 - `target: string` (required)
@@ -156,7 +198,7 @@ If a directive is not namespaced:
 
 ---
 
-### 1.7 Policy
+### 1.8 Policy
 **Fields**
 - `active_contract_ids: string[]` (required)
 - `active_scope_id: string | null` (required)
