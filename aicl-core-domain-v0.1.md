@@ -68,6 +68,7 @@ Modules MAY extend actions/commands/profiles/rules without changing this core.
 
 **Invariants**
 - A directive invoked in chat MUST match a known `directive_name` exactly, or `ERROR`.
+- If more than one active contract defines the same `directive_name` and the directive is not namespaced, the system MUST `ERROR` with `AMBIGUOUS_COMMAND`.
 
 **Core effect style (no directive-chaining)**
 - Feature commands MUST NOT execute core directives by text expansion.
@@ -90,9 +91,10 @@ Modules MAY extend actions/commands/profiles/rules without changing this core.
 **Directive recognition (strict)**
 A message is a Directive only if ALL are true:
 1) The **first character** is `/` (no leading whitespace/newlines).
-2) It matches the exact form `/name(...)`.
+2) It matches the exact form `/name(...)` OR `/ns.name(...)`.
 3) `name` starts with a letter and contains only letters/digits/`_`/`-`.
-4) Parentheses `(` and `)` are present as a matching pair.
+4) If present, `ns` starts with a letter and contains only letters/digits/`_`/`-`.
+5) Parentheses `(` and `)` are present as a matching pair.
 
 If not satisfied, the message MUST NOT be treated as a directive and MUST NOT change state.
 
@@ -102,6 +104,24 @@ If not satisfied, the message MUST NOT be treated as a directive and MUST NOT ch
   - MUST NOT change state
   - Turn outcome MUST be `REFUSE`
   - Assistant MAY provide gentle corrective feedback.
+
+---
+## 1.8 Directive Namespacing and Resolution (v0.1)
+
+### Namespaced directive form
+- A directive MAY use an optional namespace prefix: `/ns.name(...)`.
+- `ns` SHOULD match a `contract_id`.
+
+### Resolution rules (deterministic)
+If a directive is namespaced:
+- The system MUST resolve the command only within the contract identified by `ns`.
+- If `ns` does not identify a loaded contract, the system MUST `ERROR` with `UNKNOWN_CONTRACT`.
+- If the contract exists but does not define `name`, the system MUST `ERROR` with `UNKNOWN_COMMAND`.
+
+If a directive is not namespaced:
+- If exactly one **active** contract defines `name`, the system MUST resolve to that command.
+- If zero active contracts define `name`, the system MUST `ERROR` with `UNKNOWN_COMMAND`.
+- If more than one active contract defines `name`, the system MUST `ERROR` with `AMBIGUOUS_COMMAND`.
 
 ---
 
