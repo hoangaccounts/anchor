@@ -1,17 +1,17 @@
-# AICL End-to-End Generation Prompt (Revised)
+# End-to-End Specification Generation Prompt (Generic)
 
-You are given the document **`aicl-design-intent-and-constraints.md`**.
+You are given the document **`design-intent-and-constraints.md`**.
 
 Treat it as **authoritative and binding**.  
-It defines the design intent and non-negotiable constraints for AICL.
+It defines the design intent and non-negotiable constraints for the specification.
 
-Your task is to derive AICL end-to-end and produce **exactly three outputs**, in this exact order.
+Your task is to derive the specification end-to-end and produce **exactly three outputs**, in this exact order.
 
 ---
 
-## OUTPUT 1 — AICL SPECIFICATION (Normative)
+## OUTPUT 1 — SPECIFICATION (Normative)
 
-Write a **formal, normative specification** for AICL.
+Write a **formal, normative specification** for the target language/specification.
 
 ### Language rules
 - Use **normative language only**: MUST, MUST NOT, SHALL, SHALL NOT, MAY.
@@ -66,7 +66,7 @@ This defines *what a contract is*, independent of how it is serialized.
 - Errors MUST indicate broken invariants, ambiguity, or invalid contract state.
 
 #### 7. Encoding Flexibility Rule
-- AICL MUST NOT require a single serialization or syntax format.
+- The specification MUST NOT require a single serialization or syntax format.
 - Any concrete encoding is valid **iff** it can be mapped **losslessly** to the Canonical Contract Model.
 - An encoding that cannot represent all required fields or constraints SHALL be invalid.
 
@@ -118,7 +118,7 @@ Requirements:
 
 ## Global Rules (Binding)
 
-- Do not infer intent beyond what is written in `aicl-design-intent-and-constraints.md`.
+- Do not infer intent beyond what is written in `design-intent-and-constraints.md`.
 - Do not violate any constraint in the intent document.
 - If two constraints conflict, surface the conflict explicitly.
 - Refusal is a correct outcome when behavior is not permitted.
@@ -128,6 +128,6 @@ Requirements:
 
 ## Evaluation Reminder (Implicit)
 
-If the output does not enable an end user to **write**, **activate**, and **rely on** an AICL contract without inference, the specification is incomplete.
+If the output does not enable an end user to **write**, **activate**, and **rely on** a contract without inference, the specification is incomplete.
 
 Produce the three outputs now.
