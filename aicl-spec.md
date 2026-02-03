@@ -152,6 +152,21 @@ If not satisfied, the message MUST NOT be treated as a directive and MUST NOT ch
 - A directive MAY use an optional namespace prefix: `/ns.name(...)`.
 - `ns` SHOULD match a loaded module's `module_namespace`.
 
+### Module-local names (canonicalization)
+
+Within a loaded `[[MODULE]]` block with `module_namespace = ns`:
+
+- The system MUST treat all identifiers defined inside the module as module-local and MUST canonicalize them by prefixing with `ns`.
+- The system MUST canonicalize identifier values to `{ns}.{value}`.
+- Identifier values inside a module MUST NOT contain `.`.
+- The system MUST canonicalize `Command.directive_name` to `/{ns}.{value}`.
+
+Exceptions:
+
+- The system MUST NOT canonicalize `target` fields.
+- The system MUST NOT canonicalize any `effects` fields.
+
+
 ### Resolution rules (deterministic)
 If a directive is namespaced:
 - The system MUST resolve the command only within the module identified by `ns`.
