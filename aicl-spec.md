@@ -196,6 +196,8 @@ If not satisfied, the message MUST NOT be treated as an update_key and MUST NOT 
 
 ### 1.7.2 Command invocation resolution
 
+- A `Command` MUST be treated as **active** if and only if it is defined in a Module that successfully loaded (i.e., the Module did not FAIL validation).
+- The set of active `Command.command_key` values MUST be the set of `Command.command_key` values defined in all successfully loaded Modules.
 - A message that matches Command invocation syntax MUST be resolved against the set of active `Command.command_key` values.
 - Command resolution MUST mirror UpdateKey resolution semantics.
 - If an invocation uses `/ns.command_key(args)`, the system MUST resolve only within the loaded module with `module_namespace = ns`.
