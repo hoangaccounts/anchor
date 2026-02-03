@@ -1,24 +1,25 @@
-# AICL Core Domain v0.1 — Shape (Generator Scaffold)
-
-This document freezes the **v0.1 shape** (domain objects, invariants, lifecycle, and deterministic semantics).
+# AICL Core Domain v0.2 — Shape (Generator Scaffold)
+This document freezes the **v0.2 shape** (domain objects, invariants, lifecycle, and deterministic semantics).
 A Module is a namespace container that may contain: Actions, Commands, Profiles, Rules, and Contracts. Contracts may contain StateUpdates.
 
 ---
 
-## 0. Encoding and File Structure (v0.1)
-
+## 0. Encoding and File Structure
 ### 0.1 Fixed block markers
 - A serialized AICL artifact MUST use only the following block markers:
   - `[[MODULE]]` ... `[[/MODULE]]`
   - `[[CONTRACT]]` ... `[[/CONTRACT]]`
+  - `[[COMMAND]]` ... `[[/COMMAND]]`
+
 - A file MAY contain one or more `[[MODULE]]` blocks.
 - Text outside `[[MODULE]]` blocks MUST be ignored by the runtime and MUST be ignored by validators unless a tool explicitly declares otherwise.
 
 ### 0.2 Module envelope rules
 - `[[MODULE]]` blocks MUST contain:
   - Module metadata lines (`module_name`, `module_version`, `module_namespace`, optional `description`), AND
-  - one or more `[[CONTRACT]]` blocks.
-- `[[MODULE]]` blocks MUST NOT contain any other top-level content besides the metadata lines and `[[CONTRACT]]` blocks.
+  - one or more `[[CONTRACT]]` blocks, AND
+  - zero or more `[[COMMAND]]` blocks.
+- `[[MODULE]]` blocks MUST NOT contain any other top-level content besides the metadata lines, `[[CONTRACT]]` blocks, and `[[COMMAND]]` blocks.
 - Within a single file, `module_namespace` values MUST be unique; duplicates MUST produce `ERROR`.
 
 ### 0.3 Contract encoding rules (YAML only)
@@ -58,7 +59,7 @@ Unless explicitly stated otherwise:
 - `module_namespace` MUST be non-empty.
 - Duplicate `module_namespace` among loaded modules MUST produce `ERROR`.
 
-**Module namespace and canonicalization (v0.1)**
+**Module namespace and canonicalization **
 
 - A `[[MODULE]]` MUST be a namespace container; there MUST be no global identifiers for items defined inside a module.
 - Within a loaded `[[MODULE]]` block with `module_namespace = ns`:
@@ -131,7 +132,7 @@ Unless explicitly stated otherwise:
 **Invariants**
 - Unknown `action_id` referenced by any Rule MUST `ERROR` (fail closed).
 
-**Built-in minimum change-existing actions (v0.1)**
+**Built-in minimum change-existing actions **
 - `EDIT_EXISTING_ARTIFACT`
 - `DELETE_CONTENT`
 - `REORDER_CONTENT`
@@ -185,15 +186,15 @@ If not satisfied, the message MUST NOT be treated as an update_key and MUST NOT 
 
 ---
 
-### 1.7 Commands (v0.2)
+### 1.7 Commands
 
-### 1.7.1 Command Definitions (v0.2)
+### 1.7.1 Command Definitions
 - A `Module` MAY define `commands: Command[]`.
 - Each `Command` MUST belong to exactly one Module.
 - There MUST be no global Command identifiers outside a Module namespace.
 
 
-### 1.7.2 Command invocation resolution (v0.2)
+### 1.7.2 Command invocation resolution
 
 - A message that matches Command invocation syntax MUST be resolved against the set of active `Command.command_key` values.
 - Command resolution MUST mirror UpdateKey resolution semantics.
@@ -206,7 +207,7 @@ If not satisfied, the message MUST NOT be treated as an update_key and MUST NOT 
 
 
 
-### 1.7.3 Command (v0.2)
+### 1.7.3 Command
 
 **Fields**
 - `command_id: string` (required; fully-qualified; used by policy)
@@ -225,7 +226,7 @@ If not satisfied, the message MUST NOT be treated as an update_key and MUST NOT 
 ---
 
 
-### 1.7.4 CommandCall (v0.2)
+### 1.7.4 CommandCall
 
 **Fields**
 - `command_key: string`
@@ -237,7 +238,7 @@ If not satisfied, the message MUST NOT be treated as an update_key and MUST NOT 
 ---
 
 
-### 1.7.5 Command Recognition (v0.2)
+### 1.7.5 Command Recognition
 
 A message is a Command invocation only if ALL are true:
 1) The first character is `/` (no leading whitespace/newlines).
@@ -276,7 +277,7 @@ If not satisfied, the message MUST NOT be treated as a CommandCall.
 
 ---
 
-### 1.7.6 Command Effects (v0.2)
+### 1.7.6 Command Effects
 
 Commands MUST declare effects explicitly. The core effect vocabulary is closed:
 
@@ -300,7 +301,7 @@ Commands are read-only unless `write_state` is declared.
 - `immutability: map<string, any>` (required)
 - `status: "proposed" | "approved" | "rejected" | "cleared"` (required)
 
-**Minimum bounds support (v0.1)**
+**Minimum bounds support **
 - Append-only:
   - `operation=append_section`
   - `bounds`: `{ "insert_after_heading": "<heading>" }` OR `{ "append_to_end": true }`
