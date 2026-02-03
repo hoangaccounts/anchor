@@ -61,9 +61,9 @@ Modules MAY extend actions/commands/profiles/rules without changing this core.
 **UpdateKey invocation resolution (deterministic)**
 
 - A message that matches UpdateKey recognition MUST be resolved against the set of active `StateUpdate.update_key` values.
-- If an invocation uses `/ns.value(...)`, the system MUST resolve only within the loaded module with `module_namespace = ns`.
+- If an invocation uses `/ns.value = <rhs>`, the system MUST resolve only within the loaded module with `module_namespace = ns`.
   - If `ns` does not identify a loaded module namespace, the system MUST `ERROR` with `UNKNOWN_MODULE`.
-- If an invocation uses `/value(...)` (no namespace), the system MUST resolve across all loaded modules.
+- If an invocation uses `/value = <rhs>` (no namespace), the system MUST resolve across all loaded modules.
 - If exactly one active `StateUpdate.update_key` matches the invocation, the system MUST resolve to that StateUpdate.
 - If zero active `StateUpdate.update_key` values match, the system MUST `ERROR` with `UNKNOWN_UPDATE_KEY`.
 - If more than one active `StateUpdate.update_key` matches, the system MUST `ERROR` with `AMBIGUOUS_UPDATE_KEY`.
@@ -125,7 +125,7 @@ Modules MAY extend actions/commands/profiles/rules without changing this core.
 ### 1.5 StateUpdate
 **Fields**
 - `update_id: string` (required; unique within its contract/module)
-- `update_key: string` (required; the `/name(...)` token)
+- `update_key: string` (required; the `/name` token; invoked via assignment form)
 - `args_schema: map<string,string>` (required; minimal typing such as `"string"|"bool"|"int"`)
 - `effects: map<string,string|bool|string[]|object>` (required; declarative state mutations)
 - `note: string | null` (optional)
@@ -155,13 +155,20 @@ Modules MAY extend actions/commands/profiles/rules without changing this core.
 **UpdateKey recognition (strict)**
 A message is a UpdateKey only if ALL are true:
 1) The **first character** is `/` (no leading whitespace/newlines).
-2) It matches the exact form `/name(...)` OR `/ns.name(...)`.
+2) It matches the exact form `/name = <rhs>` OR `/ns.name = <rhs>`.
 3) `name` starts with a letter and contains only letters/digits/`_`/`-`.
 4) If present, `ns` starts with a letter and contains only letters/digits/`_`/`-`.
-5) Parentheses `(` and `)` are present as a matching pair.
+5) The delimiter MUST be `=` with at least one space on each side.
+6) `<rhs>` MUST be non-empty after trimming.
 
 If not satisfied, the message MUST NOT be treated as an update_key and MUST NOT change state.
 
+
+**RHS parsing (deterministic)**
+- `<rhs>` MUST be parsed using the restricted YAML 1.2 subset.
+- If `<rhs>` parses to a mapping, `UpdateKey.args` MUST be that mapping.
+- If `<rhs>` parses to a scalar, `UpdateKey.args` MUST be `{ "value": <scalar> }`.
+- If `<rhs>` fails to parse under the restricted subset, the input MUST be treated as a near-miss.
 **Near-miss handling**
 - If input resembles an update_key but fails recognition/validation, it MUST be treated as a **near-miss**:
   - MUST NOT execute
@@ -194,10 +201,10 @@ If not satisfied, the message MUST NOT be treated as an update_key and MUST NOT 
   - `immutability`: `{ "no_changes_outside_range": true }`
 
 **Scope update_keys (core)**
-- `/proposeScope(<scope_payload>)` → registers scope as `proposed`
-- `/approveScope(scope_id="<id>")` → sets scope `approved` and active
-- `/rejectScope(scope_id="<id>")` → sets scope `rejected`
-- `/clearScope()` → clears active scope
+- `/proposeScope = <scope_payload>` → registers scope as `proposed`
+- `/approveScope = { scope_id: "<id>" }` → sets scope `approved` and active
+- `/rejectScope = { scope_id: "<id>" }` → sets scope `rejected`
+- `/clearScope = true` → clears active scope
 
 ---
 
