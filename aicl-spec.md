@@ -1,7 +1,7 @@
 # AICL Core Domain v0.1 — Shape (Generator Scaffold)
 
 This document freezes the **v0.1 shape** (domain objects, invariants, lifecycle, and deterministic semantics).
-Modules MAY extend actions/state_updates/profiles/rules without changing this core.
+Modules MAY extend actions/commands/profiles/rules without changing this core.
 
 ---
 
@@ -43,7 +43,12 @@ Modules MAY extend actions/state_updates/profiles/rules without changing this co
 **Invariants**
 - `module_name` MUST be non-empty.
 - `module_namespace` MUST be non-empty.
-- Duplicate `module_namespace` among loaded modules MUST produce `ERROR**Module namespace and canonicalization (v0.1)**
+- Duplicate `module_namespace` among loaded modules MUST produce `ERROR### 1.1.a Commands (v0.2)
+- A `Module` MAY define `commands: Command[]`.
+- Each `Command` MUST belong to exactly one Module.
+- There MUST be no global Command identifiers outside a Module namespace.
+
+**Module namespace and canonicalization (v0.1)**
 
 - A `[[MODULE]]` MUST be a namespace container; there MUST be no global identifiers for items defined inside a module.
 - Within a loaded `[[MODULE]]` block with `module_namespace = ns`:
@@ -71,6 +76,18 @@ Modules MAY extend actions/state_updates/profiles/rules without changing this co
 - If more than one active `StateUpdate.update_key` matches, the system MUST `ERROR` with `AMBIGUOUS_UPDATE_KEY`.
 
 
+**Command invocation resolution (v0.2)**
+
+- A message that matches Command invocation syntax MUST be resolved against the set of active `Command.command_key` values.
+- Command resolution MUST mirror UpdateKey resolution semantics.
+- If an invocation uses `/ns.command_key(args)`, the system MUST resolve only within the loaded module with `module_namespace = ns`.
+  - If `ns` does not identify a loaded module namespace, the system MUST `ERROR` with `UNKNOWN_MODULE`.
+- If an invocation uses `/command_key(args)` (no namespace), the system MUST resolve across all loaded modules.
+- If exactly one active `Command.command_key` matches the invocation, the system MUST resolve to that Command.
+- If zero active `Command.command_key` values match, the system MUST `ERROR` with `UNKNOWN_COMMAND`.
+- If more than one active `Command.command_key` matches, the system MUST `ERROR` with `AMBIGUOUS_COMMAND`.
+
+
 ---
 
 ### 1.2 Contract
@@ -78,7 +95,7 @@ Modules MAY extend actions/state_updates/profiles/rules without changing this co
 - `contract_id: string` (required; unique within a loaded file)
 - `version: string` (required)
 - `rules: Rule[]` (required; MAY be empty)
-- `state_updates: StateUpdate[]` (optional; default empty)
+- `commands: StateUpdate[]` (optional; default empty)
 - `metadata: map<string,string|bool|string[]>` (optional)
 
 **Invariants**
@@ -138,12 +155,41 @@ Modules MAY extend actions/state_updates/profiles/rules without changing this co
 - If more than one active contract defines the same `update_key` and the update_key is not namespaced, the system MUST `ERROR` with `AMBIGUOUS_UPDATE_KEY`.
 
 **Core effect style (no update_key-chaining)**
-- Feature state updates MUST NOT execute core update_keys by text expansion.
-- Feature state updates MAY declare effects that mutate core runtime state fields (typed effects), e.g.:
+- Feature commands MUST NOT execute core update_keys by text expansion.
+- Feature commands MAY declare effects that mutate core runtime state fields (typed effects), e.g.:
   - add/remove active profiles
   - set output format flags
   - activate/terminate contracts via state mutation
   - propose scope payloads
+
+---
+
+### 1.5.a Command (v0.2)
+
+**Fields**
+- `command_id: string` (required; fully-qualified; used by policy)
+- `command_key: string` (required; user-facing invocation name)
+- `args_schema: map<string, any>` (required)
+- `result_schema: map<string, any>` (optional)
+- `effects: Effect[]` (required)
+- `render: object | null` (optional; deterministic render contract)
+
+**Invariants**
+- A Command MAY perform only declared effects.
+- A Command is read-only unless `write_state` is declared.
+- Commands MUST NOT implicitly mutate state.
+- Output MUST be derived solely from `result_schema` and `render`.
+
+---
+
+### 1.5.b CommandCall (v0.2)
+
+**Fields**
+- `command_key: string`
+- `args: map<string, any>`
+
+**Invariant**
+- A CommandCall represents queued intent, not execution.
 
 ---
 
@@ -166,6 +212,21 @@ A message is a UpdateKey only if ALL are true:
 7) `<rhs>` MUST be contained on the same line as the update_key.
 8) The message MUST NOT contain `(` or `)` characters anywhere.
 If not satisfied, the message MUST NOT be treated as an update_key and MUST NOT change state.
+
+
+---
+
+### 1.6.a Command Recognition (v0.2)
+
+A message is a Command invocation only if ALL are true:
+1) The first character is `/` (no leading whitespace/newlines).
+2) It matches the exact form `/name(args)` OR `/ns.name(args)`.
+3) `name` starts with a letter and contains only letters/digits/`_`/`-`.
+4) If present, `ns` starts with a letter and contains only letters/digits/`_`/`-`.
+5) Parentheses MUST be present and balanced.
+6) The message MUST NOT match UpdateKey recognition.
+
+If not satisfied, the message MUST NOT be treated as a CommandCall.
 
 
 **RHS parsing (deterministic)**
@@ -232,6 +293,20 @@ If not satisfied, the message MUST NOT be treated as an update_key and MUST NOT 
 
 **Invariants**
 - If conflicts exist among active contracts’ rules for the same conflict key, the system MUST `ERROR`.
+
+---
+
+### 1.8.a Command Effects (v0.2)
+
+Commands MUST declare effects explicitly. The core effect vocabulary is closed:
+
+- `emit_output`
+- `emit_artifact(kind)`
+- `read_history(selector)`
+- `read_state(paths[])`
+- `write_state(paths[])`
+
+Commands are read-only unless `write_state` is declared.
 
 ---
 
@@ -307,12 +382,14 @@ Each user turn MUST be atomic:
   - MUST NOT partially apply changes
 
 Deterministic order of operations:
-1) Parse update_keys (if any)
+1) Parse UpdateKey or CommandCall (at most one)
 2) Validate update_key(s) (invalid/unknown identities → `ERROR`)
 3) Compute effective Policy + detect conflicts (conflict → `ERROR`)
 4) Classify requested actions
 5) Enforce permissions/requirements/scope (violation → `REFUSE`)
-6) Execute permitted actions (all-or-nothing)
+6) Execute permitted UpdateKey or Command (all-or-nothing)
+
+If a Command emits output and writes state, all effects MUST apply atomically or not at all.
 
 ---
 
