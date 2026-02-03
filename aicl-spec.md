@@ -16,7 +16,7 @@ Modules MAY extend actions/commands/profiles/rules without changing this core.
 
 ### 0.2 Module envelope rules
 - `[[MODULE]]` blocks MUST contain:
-  - Module metadata lines (`module_id`, `module_version`, `module_namespace`, optional `description`), AND
+  - Module metadata lines (`module_name`, `module_version`, `module_namespace`, optional `description`), AND
   - one or more `[[CONTRACT]]` blocks.
 - `[[MODULE]]` blocks MUST NOT contain any other top-level content besides the metadata lines and `[[CONTRACT]]` blocks.
 - Within a single file, `module_namespace` values MUST be unique; duplicates MUST produce `ERROR`.
@@ -34,27 +34,25 @@ Modules MAY extend actions/commands/profiles/rules without changing this core.
 
 ### 1.1 Module
 **Fields**
-- `module_id: string` (required)
+- `module_name: string` (required)
 - `module_version: string` (required)
 - `module_namespace: string` (required; unique within a loaded file)
 - `description: string` (optional)
 - `contracts: Contract[]` (required; one or more)
 
 **Invariants**
-- `module_id` MUST be non-empty.
+- `module_name` MUST be non-empty.
 - `module_namespace` MUST be non-empty.
-- Duplicate `module_namespace` among loaded modules MUST produce `ERROR`.
-
-**Module namespace and canonicalization (v0.1)**
+- Duplicate `module_namespace` among loaded modules MUST produce `ERROR**Module namespace and canonicalization (v0.1)**
 
 - A `[[MODULE]]` MUST be a namespace container; there MUST be no global identifiers for items defined inside a module.
 - Within a loaded `[[MODULE]]` block with `module_namespace = ns`:
-  - The system MUST treat the following identifier values as module-local:
-    - `Contract.contract_id`
-    - `StateUpdate.update_key` (as stored in the contract file)
-  - The system MUST canonicalize those identifier values by prefixing with `ns`.
-  - The system MUST canonicalize identifier values to `{ns}.{value}`.
-  - Identifier values inside a module MUST NOT contain `.`.
+  - The system MUST treat as identifier fields:
+    - any field name that ends with `_id`, and
+    - `StateUpdate.update_key` (as stored in the contract file).
+  - The system MUST canonicalize identifier-field values defined inside the module by prefixing with `ns`.
+  - The system MUST canonicalize identifier-field values to `{ns}.{value}`.
+  - Identifier-field values inside a module MUST NOT contain `.`.
   - The system MUST canonicalize `StateUpdate.update_key` to `/{ns}.{value}`.
 - Field-level exemptions:
   - The system MUST NOT canonicalize any `target` field value.
