@@ -45,6 +45,32 @@ Modules MAY extend actions/commands/profiles/rules without changing this core.
 - `module_namespace` MUST be non-empty.
 - Duplicate `module_namespace` among loaded modules MUST produce `ERROR`.
 
+**Module namespace and canonicalization (v0.1)**
+
+- A `[[MODULE]]` MUST be a namespace container; there MUST be no global identifiers for items defined inside a module.
+- Within a loaded `[[MODULE]]` block with `module_namespace = ns`:
+  - The system MUST treat the following identifier values as module-local:
+    - `Contract.contract_id`
+    - `StateUpdate.update_key` (as stored in the contract file)
+  - The system MUST canonicalize those identifier values by prefixing with `ns`.
+  - The system MUST canonicalize identifier values to `{ns}.{value}`.
+  - Identifier values inside a module MUST NOT contain `.`.
+  - The system MUST canonicalize `StateUpdate.update_key` to `/{ns}.{value}`.
+- Field-level exemptions:
+  - The system MUST NOT canonicalize any `target` field value.
+  - The system MUST NOT canonicalize any `effects` field key or value.
+
+**UpdateKey invocation resolution (deterministic)**
+
+- A message that matches UpdateKey recognition MUST be resolved against the set of active `StateUpdate.update_key` values.
+- If an invocation uses `/ns.value(...)`, the system MUST resolve only within the loaded module with `module_namespace = ns`.
+  - If `ns` does not identify a loaded module namespace, the system MUST `ERROR` with `UNKNOWN_MODULE`.
+- If an invocation uses `/value(...)` (no namespace), the system MUST resolve across all loaded modules.
+- If exactly one active `StateUpdate.update_key` matches the invocation, the system MUST resolve to that StateUpdate.
+- If zero active `StateUpdate.update_key` values match, the system MUST `ERROR` with `UNKNOWN_UPDATE_KEY`.
+- If more than one active `StateUpdate.update_key` matches, the system MUST `ERROR` with `AMBIGUOUS_UPDATE_KEY`.
+
+
 ---
 
 ### 1.2 Contract
@@ -107,8 +133,8 @@ Modules MAY extend actions/commands/profiles/rules without changing this core.
 - `note: string | null` (optional)
 
 **Invariants**
-- A update_key invoked in chat MUST match a known `update_key` exactly, or `ERROR`.
-- If more than one active contract defines the same `update_key` and the update_key is not namespaced, the system MUST `ERROR` with `AMBIGUOUS_COMMAND`.
+- An update_key invoked in chat MUST match a known `update_key` exactly, or `ERROR`.
+- If more than one active contract defines the same `update_key` and the update_key is not namespaced, the system MUST `ERROR` with `AMBIGUOUS_UPDATE_KEY`.
 
 **Core effect style (no update_key-chaining)**
 - Feature commands MUST NOT execute core update_keys by text expansion.
@@ -136,52 +162,16 @@ A message is a UpdateKey only if ALL are true:
 4) If present, `ns` starts with a letter and contains only letters/digits/`_`/`-`.
 5) Parentheses `(` and `)` are present as a matching pair.
 
-If not satisfied, the message MUST NOT be treated as a update_key and MUST NOT change state.
+If not satisfied, the message MUST NOT be treated as an update_key and MUST NOT change state.
 
 **Near-miss handling**
-- If input resembles a update_key but fails recognition/validation, it MUST be treated as a **near-miss**:
+- If input resembles an update_key but fails recognition/validation, it MUST be treated as a **near-miss**:
   - MUST NOT execute
   - MUST NOT change state
   - Turn outcome MUST be `REFUSE`
   - Assistant MAY provide gentle corrective feedback.
 
 ---
-## 1.9 UpdateKey Namespacing and Resolution (v0.1)
-
-### Namespaced update_key form
-- A update_key MAY use an optional namespace prefix: `/ns.name(...)`.
-- `ns` SHOULD match a loaded module's `module_namespace`.
-
-### Module-local names (canonicalization)
-
-Within a loaded `[[MODULE]]` block with `module_namespace = ns`:
-
-- The system MUST treat all identifiers defined inside the module as module-local and MUST canonicalize them by prefixing with `ns`.
-- The system MUST canonicalize identifier values to `{ns}.{value}`.
-- Identifier values inside a module MUST NOT contain `.`.
-- The system MUST canonicalize `StateUpdate.update_key` to `/{ns}.{value}`.
-
-Exceptions:
-
-- The system MUST NOT canonicalize `target` fields.
-- The system MUST NOT canonicalize any `effects` fields.
-
-
-### Resolution rules (deterministic)
-If a update_key is namespaced:
-- The system MUST resolve the command only within the module identified by `ns`.
-- If `ns` does not identify a loaded module namespace, the system MUST `ERROR` with `UNKNOWN_MODULE`.
-- If the module contains zero **active** contracts that define `name`, the system MUST `ERROR` with `UNKNOWN_COMMAND`.
-- If the module contains exactly one **active** contract that defines `name`, the system MUST resolve to that command.
-- If the module contains more than one **active** contract that define `name`, the system MUST `ERROR` with `AMBIGUOUS_COMMAND`.
-
-If a update_key is not namespaced:
-- If exactly one **active** contract defines `name`, the system MUST resolve to that command.
-- If zero active contracts define `name`, the system MUST `ERROR` with `UNKNOWN_COMMAND`.
-- If more than one active contract defines `name`, the system MUST `ERROR` with `AMBIGUOUS_COMMAND`.
-
----
-
 ### 1.7 Scope
 **Fields**
 - `scope_id: string` (required)
@@ -317,7 +307,7 @@ Each turn MUST classify as exactly one of:
 
 ### 6.2 ERROR
 `ERROR` means invalid state or broken invariant, including:
-- Unknown contract/profile/action/command identity
+- Unknown contract/profile/action/state update identity
 - Missing/invalid required fields in loaded artifacts
 - Rule conflicts (type A or B)
 - Invalid update_key structure that is not a near-miss classification case
