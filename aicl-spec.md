@@ -1,7 +1,7 @@
 # AICL Core Domain v0.1 — Shape (Generator Scaffold)
 
 This document freezes the **v0.1 shape** (domain objects, invariants, lifecycle, and deterministic semantics).
-Modules MAY extend actions/commands/profiles/rules without changing this core.
+Modules MAY extend actions/state_updates/profiles/rules without changing this core.
 
 ---
 
@@ -78,7 +78,7 @@ Modules MAY extend actions/commands/profiles/rules without changing this core.
 - `contract_id: string` (required; unique within a loaded file)
 - `version: string` (required)
 - `rules: Rule[]` (required; MAY be empty)
-- `commands: StateUpdate[]` (optional; default empty)
+- `state_updates: StateUpdate[]` (optional; default empty)
 - `metadata: map<string,string|bool|string[]>` (optional)
 
 **Invariants**
@@ -138,8 +138,8 @@ Modules MAY extend actions/commands/profiles/rules without changing this core.
 - If more than one active contract defines the same `update_key` and the update_key is not namespaced, the system MUST `ERROR` with `AMBIGUOUS_UPDATE_KEY`.
 
 **Core effect style (no update_key-chaining)**
-- Feature commands MUST NOT execute core update_keys by text expansion.
-- Feature commands MAY declare effects that mutate core runtime state fields (typed effects), e.g.:
+- Feature state updates MUST NOT execute core update_keys by text expansion.
+- Feature state updates MAY declare effects that mutate core runtime state fields (typed effects), e.g.:
   - add/remove active profiles
   - set output format flags
   - activate/terminate contracts via state mutation
