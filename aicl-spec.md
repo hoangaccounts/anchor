@@ -160,15 +160,25 @@ A message is a UpdateKey only if ALL are true:
 4) If present, `ns` starts with a letter and contains only letters/digits/`_`/`-`.
 5) The delimiter MUST be `=` with at least one space on each side.
 6) `<rhs>` MUST be non-empty after trimming.
-
+7) `<rhs>` MUST be contained on the same line as the update_key.
+8) The message MUST NOT contain `(` or `)` characters anywhere.
 If not satisfied, the message MUST NOT be treated as an update_key and MUST NOT change state.
 
 
 **RHS parsing (deterministic)**
 - `<rhs>` MUST be parsed using the restricted YAML 1.2 subset.
+- The YAML subset MUST exclude anchors, aliases, tags, multi-document streams, and implicit typing beyond string, boolean, and integer.
 - If `<rhs>` parses to a mapping, `UpdateKey.args` MUST be that mapping.
 - If `<rhs>` parses to a scalar, `UpdateKey.args` MUST be `{ "value": <scalar> }`.
 - If `<rhs>` fails to parse under the restricted subset, the input MUST be treated as a near-miss.
+
+**Args validation (strict)**
+- The system MUST validate `UpdateKey.args` against the resolved `StateUpdate.args_schema`.
+- If `UpdateKey.args` is missing any required key defined in `args_schema`, the input MUST be treated as a near-miss.
+- If `UpdateKey.args` contains keys not defined in `args_schema`, the input MUST be treated as a near-miss.
+- If `<rhs>` parses to an empty mapping `{}` and `args_schema` is non-empty, the input MUST be treated as a near-miss.
+- If `args_schema` is empty, `UpdateKey.args` MUST be an empty mapping.
+
 **Near-miss handling**
 - If input resembles an update_key but fails recognition/validation, it MUST be treated as a **near-miss**:
   - MUST NOT execute
