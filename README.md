@@ -132,8 +132,6 @@ Deterministic enforcement.
 
 ---
 
-## Philosophy: Why This Matters
----
 
 ## Philosophy: Why This Matters
 
@@ -205,8 +203,6 @@ Actions that change existing artifacts MUST require an approved scope, or the tu
 
 ---
 
-## Key Concepts
----
 
 ## Key Concepts
 
@@ -243,8 +239,6 @@ Commands are first-class core objects, defined in `[[COMMAND]]` blocks and invok
 
 ---
 
-## Quick Start: Engineering Workflow
----
 
 ## Quick Start: Engineering Workflow
 
@@ -294,8 +288,6 @@ From here, policy (rules + scope) deterministically gates what the assistant may
 
 ---
 
-## Design Trade-offs
----
 
 ## Design Trade-offs
 
@@ -381,8 +373,6 @@ Additional block types and higher-level authoring conveniences may be introduced
 
 ---
 
-## Contributing
----
 
 ## Contributing
 
