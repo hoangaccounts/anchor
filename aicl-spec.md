@@ -60,6 +60,8 @@ Modules MAY extend actions/commands/profiles/rules without changing this core.
 
 **UpdateKey invocation resolution (deterministic)**
 
+
+- `update_key` identifiers MUST be case-sensitive and MUST be matched exactly.
 - A message that matches UpdateKey recognition MUST be resolved against the set of active `StateUpdate.update_key` values.
 - If an invocation uses `/ns.value = <rhs>`, the system MUST resolve only within the loaded module with `module_namespace = ns`.
   - If `ns` does not identify a loaded module namespace, the system MUST `ERROR` with `UNKNOWN_MODULE`.
@@ -128,6 +130,7 @@ Modules MAY extend actions/commands/profiles/rules without changing this core.
 - `update_key: string` (required; the `/name` token; invoked via assignment form)
 - `args_schema: map<string,string>` (required; minimal typing such as `"string"|"bool"|"int"`)
 - `effects: map<string,string|bool|string[]|object>` (required; declarative state mutations)
+- An UpdateKey invocation MUST NOT cause side effects other than the declarative state mutations defined in its `effects`.
 - `note: string | null` (optional)
 
 **Invariants**
@@ -168,10 +171,10 @@ If not satisfied, the message MUST NOT be treated as an update_key and MUST NOT 
 **RHS parsing (deterministic)**
 - `<rhs>` MUST be parsed using the restricted YAML 1.2 subset.
 - The YAML subset MUST exclude anchors, aliases, tags, multi-document streams, and implicit typing beyond string, boolean, and integer.
+- Unquoted scalar values MUST be treated as strings unless they match the boolean or integer grammar of the restricted YAML subset.
 - If `<rhs>` parses to a mapping, `UpdateKey.args` MUST be that mapping.
 - If `<rhs>` parses to a scalar, `UpdateKey.args` MUST be `{ "value": <scalar> }`.
 - If `<rhs>` fails to parse under the restricted subset, the input MUST be treated as a near-miss.
-
 **Args validation (strict)**
 - The system MUST validate `UpdateKey.args` against the resolved `StateUpdate.args_schema`.
 - If `UpdateKey.args` is missing any required key defined in `args_schema`, the input MUST be treated as a near-miss.
@@ -181,6 +184,7 @@ If not satisfied, the message MUST NOT be treated as an update_key and MUST NOT 
 
 **Near-miss handling**
 - If input resembles an update_key but fails recognition/validation, it MUST be treated as a **near-miss**:
+  - MUST report a user-visible refusal message
   - MUST NOT execute
   - MUST NOT change state
   - Turn outcome MUST be `REFUSE`
