@@ -2,7 +2,7 @@
 
 **A deterministic contract language for AI systems**
 
-Version: 0.1  
+Version: 0.2  
 Status: Core domain specified and stable
 
 ---
@@ -75,42 +75,59 @@ These contracts are parsed and **self-enforced by the AI assistant itself**, pro
 
 Commands and UpdateKeys are the explicit execution mechanisms: only properly recognized invocations can change state or trigger declared effects.
 
-### Minimal example (v0.1 shape)
+### Minimal example (v0.2 shape)
 
 ```yaml
 [[MODULE]]
 module_name: engineering_workflow
-module_version: "0.1"
+module_version: "0.2"
 module_namespace: eng
 description: "Example module"
 
 [[CONTRACT]]
 contract_id: phase_gate
-version: "0.1"
+version: "0.2"
 rules:
-  - rule_id: "deny_change_without_scope"
+  - rule_id: "require_scope_for_edits"
     effect: "REQUIRE"
     action_id: "EDIT_EXISTING_ARTIFACT"
     target: null
     scope_required: true
 updates:
-  - update_id: "enter_implement"
-    update_key: "mode"
+  - update_id: "set_phase"
+    update_key: "phase"
     args_schema:
       value: string
     effects:
-      active_profiles: ["implement"]
+      active_profiles: ["{value}"]
 metadata:
   autoload: true
 [[/CONTRACT]]
+
+[[COMMAND]]
+command_id: eng.status
+command_key: status
+args_schema:
+  summary: bool
+result_schema:
+  phase: string
+effects:
+  - read_state:
+      paths: ["active_profiles"]
+render:
+  format: "text"
+[[/COMMAND]]
+
 [[/MODULE]]
 ```
 
 ```
-/mode = implement
+/phase = design
+/status(summary: true)
 ```
 
-No guessing. No interpretation. Deterministic enforcement.
+Deterministic enforcement.
+
 
 
 ---
@@ -143,21 +160,21 @@ Trust, but verify.
 
 ---
 
-## Core Domain (v0.1)
+## Core Domain (v0.2)
 
 AICL v0.1 defines a concrete, end-user-authorable contract language with the following primitives:
 
-- **Modules** — Namded containers for contracts and identifiers.
+- **Modules** — Namespaced containers for contracts and identifiers.
 - **Contracts** — Activatable policy bundles defining rules and state updates.
 - **Rules** — Closed-vocabulary permissions (`ALLOW`, `DENY`, `REQUIRE`) over actions and targets.
 - **Actions** — Explicitly declared operations (read-only or mutating).
 - **StateUpdates (UpdateKeys)** — Deterministic, side-effect-free state mutations invoked via strict syntax.
-- **Commands** — Deterministic invocations that may emit output and/or read/write declared state, but only through explicitly declared effects.
+- **Commands** — First-class core objects, defined via `[[COMMAND]]` blocks and invoked deterministically with `/name(args)`; they may emit output and/or read/write state only through explicitly declared effects.
 - **Policy** — A derived, conflict-checked view of all active rules.
 - **Scope** — Machine-checkable bounds required for mutating actions.
 - **Outcomes** — Every turn deterministically resolves to exactly one of `ALLOW`, `REFUSE`, or `ERROR`.
 
-The full normative specification lives in `aicl-spec-v0.1.md`.
+The full normative specification lives in `aicl-spec-v0.2.md`.
 
 
 ## Core Principles
@@ -221,7 +238,7 @@ RHS parses under a restricted YAML subset and is validated against `args_schema`
 
 ### Commands
 
-Commands (v0.2 in the spec scaffold) are deterministic invocations `/name(args)` with explicitly declared effects (read/write state, emit output). They are not free-form “tools”; they execute only what the contract declares.
+Commands are first-class core objects, defined in `[[COMMAND]]` blocks and invoked via `/name(args)`. They are deterministic, may perform only declared effects, and are not free-form “tools”.
 
 
 ---
