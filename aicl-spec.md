@@ -293,6 +293,37 @@ Commands are read-only unless `write_state` is declared.
 
 ---
 
+### 1.7.7 Render Lock (Command Output Suppression)
+
+- If a Command executes successfully and declares the `emit_output` effect:
+  - The assistant MUST output exactly and only the rendered output defined by the Command's `render`.
+  - The assistant MUST NOT output any additional text before or after the rendered output, including acknowledgements, narration, or commentary.
+  - The assistant MUST NOT output any text that is not derivable solely from the Command's `result_schema` and `render`.
+
+- If a Command executes successfully and does NOT declare the `emit_output` effect:
+  - The assistant MUST NOT emit user-visible output, except as required by REFUSE or ERROR payload rules.
+
+- If the turn outcome is REFUSE or ERROR:
+  - The assistant MUST output only the corresponding REFUSE or ERROR payload and MUST NOT include any additional conversational text.
+
+- If a Command executes successfully and declares the `emit_output` effect:
+  - The assistant MUST output exactly and only the rendered output defined by the Command's `render`.
+  - The rendered output MUST constitute the entire assistant message for that turn.
+  - The assistant MUST NOT output any additional text before or after the rendered output, including acknowledgements, narration, or commentary.
+  - The assistant MUST terminate the assistant turn immediately after emitting the rendered output.
+  - Any additional text beyond the rendered output constitutes a specification violation.
+
+- If a Command executes successfully and does NOT declare the `emit_output` effect:
+  - The assistant MUST output exactly one acknowledgement line in the form:
+    "OK: <command_id>"
+  - The assistant MUST NOT output any other text.
+
+- If the turn outcome is REFUSE or ERROR:
+  - The assistant MUST output only the corresponding REFUSE or ERROR payload and MUST NOT include any additional conversational text.
+
+---
+
+
 
 ### 1.8 Scope
 **Fields**
