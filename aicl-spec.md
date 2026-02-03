@@ -80,7 +80,7 @@ A Module is a namespace container that may contain: Actions, Commands, Profiles,
 - `contract_id: string` (required; unique within a loaded file)
 - `version: string` (required)
 - `rules: Rule[]` (required; MAY be empty)
-- `commands: Command[]` (optional; default empty)
+- `updates: StateUpdate[]` (optional; default empty)
 - `metadata: map<string,string|bool|string[]>` (optional)
 
 **Invariants**
@@ -140,8 +140,8 @@ A Module is a namespace container that may contain: Actions, Commands, Profiles,
 - If more than one active contract defines the same `update_key` and the update_key is not namespaced, the system MUST `ERROR` with `AMBIGUOUS_UPDATE_KEY`.
 
 **Core effect style (no update_key-chaining)**
-- Feature commands MUST NOT execute core update_keys by text expansion.
-- Feature commands MAY declare effects that mutate core runtime state fields (typed effects), e.g.:
+- Feature StateUpdate MUST NOT execute core update_keys by text expansion.
+- Feature StateUpdate MAY declare effects that mutate core runtime state fields (typed effects), e.g.:
   - add/remove active profiles
   - set output format flags
   - activate/terminate contracts via state mutation
