@@ -27,6 +27,19 @@ A Module is a namespace container that may contain: Actions, Commands, Profiles,
   - mappings, sequences, and scalars (string, boolean, integer) only
   - MUST NOT use anchors, aliases, merge keys, tags, or multi-document markers (`---`)
 - A validator MUST treat any violation of these encoding rules as `FAIL`.
+### 0.4 Validation failure vs runtime error
+
+- **FAIL** denotes a load-time or validation failure.
+  - A FAIL MUST abort artifact loading.
+  - A FAIL MUST prevent the contract/module from becoming active.
+- **ERROR** denotes a runtime turn outcome.
+  - ERROR MUST occur only during turn processing.
+  - ERROR MUST be atomic (no state or artifact changes).
+
+Unless explicitly stated otherwise:
+- Encoding, schema, and invariant violations MUST result in FAIL.
+- Runtime resolution, conflict detection, or execution violations MUST result in ERROR.
+
 
 ---
 
@@ -140,7 +153,7 @@ A Module is a namespace container that may contain: Actions, Commands, Profiles,
 - If more than one active contract defines the same `update_key` and the update_key is not namespaced, the system MUST `ERROR` with `AMBIGUOUS_UPDATE_KEY`.
 
 **Core effect style (no update_key-chaining)**
-- Feature StateUpdate MUST NOT execute core update_keys by text expansion.
+- Non-core StateUpdate MUST NOT execute core update_keys by text expansion.
 - Feature StateUpdate MAY declare effects that mutate core runtime state fields (typed effects), e.g.:
   - add/remove active profiles
   - set output format flags
@@ -158,7 +171,7 @@ A Module is a namespace container that may contain: Actions, Commands, Profiles,
 - `error_code: string | null` (optional)
 
 **UpdateKey recognition (strict)**
-A message is a UpdateKey only if ALL are true:
+A message is an UpdateKey only if ALL are true:
 1) The **first character** is `/` (no leading whitespace/newlines).
 2) It matches the exact form `/name = <rhs>` OR `/ns.name = <rhs>`.
 3) `name` starts with a letter and contains only letters/digits/`_`/`-`.
@@ -174,7 +187,7 @@ If not satisfied, the message MUST NOT be treated as an update_key and MUST NOT 
 
 ### 1.7 Commands (v0.2)
 
-### 1.7.1 Commands (v0.2)
+### 1.7.1 Command Definitions (v0.2)
 - A `Module` MAY define `commands: Command[]`.
 - Each `Command` MUST belong to exactly one Module.
 - There MUST be no global Command identifiers outside a Module namespace.
@@ -257,6 +270,8 @@ If not satisfied, the message MUST NOT be treated as a CommandCall.
   - MUST NOT execute
   - MUST NOT change state
   - Turn outcome MUST be `REFUSE`
+  - A near-miss MUST NOT be reclassified as ERROR.
+  - Near-miss classification is exclusive and final for the turn.
   - Assistant MAY provide gentle corrective feedback.
 
 ---
@@ -458,7 +473,12 @@ Compute Policy:
    - Type A: multiple distinct effects within a group
    - Type B: same effect but differing `scope_required`
 5) If any conflict exists → `ERROR` (atomic abort).
-6) Else, set `effective_rules` as one representative rule per group key (duplicates allowed; collapse permitted).
+6) If no conflicts exist:
+   - Collapse rules sharing the same conflict key into a single effective rule.
+   - Rule selection MUST be deterministic.
+   - Deterministic selection order MUST be:
+     1) lexical order of `contract_id`, then
+     2) lexical order of `rule_id`.
 
 ---
 
