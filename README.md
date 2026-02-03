@@ -73,11 +73,49 @@ Instead of relying on inferred intent or polite instructions, you author **expli
 
 These contracts are parsed and **self-enforced by the AI assistant itself**, producing deterministic outcomes (`ALLOW`, `REFUSE`, or `ERROR`) for every turn.
 
-Commands are the explicit execution mechanism: only properly recognized command/update invocations can change state or trigger declared effects.
+Commands and UpdateKeys are the explicit execution mechanisms: only properly recognized invocations can change state or trigger declared effects.
 
-There is no guessing, no best-effort behavior, and no silent drift.
+### Minimal example (v0.1 shape)
+
+```yaml
+[[MODULE]]
+module_name: engineering_workflow
+module_version: "0.1"
+module_namespace: eng
+description: "Example module"
+
+[[CONTRACT]]
+contract_id: phase_gate
+version: "0.1"
+rules:
+  - rule_id: "deny_change_without_scope"
+    effect: "REQUIRE"
+    action_id: "EDIT_EXISTING_ARTIFACT"
+    target: null
+    scope_required: true
+updates:
+  - update_id: "enter_implement"
+    update_key: "mode"
+    args_schema:
+      value: string
+    effects:
+      active_profiles: ["implement"]
+metadata:
+  autoload: true
+[[/CONTRACT]]
+[[/MODULE]]
+```
+
+```
+/mode = implement
+```
+
+No guessing. No interpretation. Deterministic enforcement.
 
 
+---
+
+## Philosophy: Why This Matters
 ---
 
 ## Philosophy: Why This Matters
@@ -109,7 +147,7 @@ Trust, but verify.
 
 AICL v0.1 defines a concrete, end-user-authorable contract language with the following primitives:
 
-- **Modules** — Namespaced containers for contracts and identifiers.
+- **Modules** — Namded containers for contracts and identifiers.
 - **Contracts** — Activatable policy bundles defining rules and state updates.
 - **Rules** — Closed-vocabulary permissions (`ALLOW`, `DENY`, `REQUIRE`) over actions and targets.
 - **Actions** — Explicitly declared operations (read-only or mutating).
@@ -124,178 +162,122 @@ The full normative specification lives in `aicl-spec-v0.1.md`.
 
 ## Core Principles
 
-### 1. **Commands Are the Only Execution Mechanism**
+### 1. **Contracts Are the Enforcement Mechanism**
 
-Free-form prose is allowed but has **zero** behavioral effect. Only properly formatted commands (`/command_name(args)`) cause the AI to take action. This eliminates the confusion of "was that an instruction or just discussion?"
+AICL enforcement comes only from loaded `[[MODULE]]` / `[[CONTRACT]]` artifacts. Free-form prose may exist, but it MUST NOT change policy or state.
 
-### 2. **Contracts Over Conversations**
+### 2. **Deterministic Outcomes**
 
-Define your expectations as machine-checkable **protocols** instead of hoping the AI understands context:
+Every user turn MUST resolve to exactly one outcome:
+- `ALLOW` — all checks pass; permitted actions execute atomically.
+- `REFUSE` — valid state, but request is not permitted or required conditions are unmet.
+- `ERROR` — invalid state or invariant violation; atomic abort.
 
-```yaml
-[[PROTOCOL]]
-protocols:
-  - id: "solid_principles"
-    rules:
-      - id: "require_dependency_injection"
-        check:
-          type: "require_pattern"
-          pattern: "dependency_injection"
-```
+### 3. **Fail-Closed Identity and Conflicts**
 
-### 3. **Self-Enforced by Design**
+Unknown identifiers, broken invariants, and policy conflicts MUST halt deterministically (`FAIL` at load-time or `ERROR` at runtime, per spec).
 
-There is no external runtime or compiler. The AI assistant itself parses, validates, and enforces these contracts. The AI **treats these rules as binding constraints** - deterministically enforcing them on its own behavior.
+### 4. **Explicit State Mutation Only**
 
-### 4. **Type-Safe State Management**
+State changes are permitted only via declared **StateUpdates (UpdateKeys)** or declared **Commands** effects. There are no implicit mutations.
 
-Track and mutate state explicitly with a proper type system:
+### 5. **Scope-Gated Mutation**
 
-```yaml
-[[STATE]]
-name: currentPhase
-type: WorkMode
-default: research
-[[/STATE]]
-```
+Actions that change existing artifacts MUST require an approved scope, or the turn MUST `REFUSE`.
 
-### 5. **Fail-Closed on Ambiguity**
-
-Any ambiguity, unknown reference, or rule violation results in a deterministic ERROR. The system never "does its best" - it halts and reports exactly what went wrong.
 
 ---
 
 ## Key Concepts
+---
 
-### WorkMode: Engineering Workflow Phases
+## Key Concepts
 
-`WorkMode` describes **what phase of development** you're in, enabling phase-gate enforcement:
+### Modules
 
-- `research` - Gather requirements, constraints, existing solutions
-- `ideate` - Brainstorm approaches, explore alternatives
-- `design` - Choose architecture, define interfaces and boundaries
-- `plan` - Break into tasks, define implementation sequence
-- `preview` - Review design, simulate outcomes before committing
-- `implement` - Execute the plan, write code
-- `test` - Verify correctness, validate assumptions
+A `[[MODULE]]` is a namespace container. Identifiers inside a module are canonicalized with `module_namespace` for determinism.
 
-Each phase can have different rules - for example, code execution might be forbidden until `implement` phase.
+### Contracts
 
-### Modules: Scoped Symbol Spaces
+A `[[CONTRACT]]` is a YAML document containing:
+- `rules` (permissions over actions/targets)
+- `updates` (StateUpdates invoked via UpdateKeys)
+- optional metadata like `autoload`
 
-All blocks (except `[[LANGUAGE_SPEC]]`) must live inside `[[MODULE]]` blocks. Each module has its own namespace for commands, state, enums, and protocols. Reference external symbols using qualified names: `ModuleName.SymbolName`.
+### Rules (ALLOW / DENY / REQUIRE)
 
-### Protocols: Machine-Checkable Rules
+Rules use a closed vocabulary and are conflict-checked across active contracts.
 
-Protocols define **deterministic, fail-closed contracts**. Every rule must be machine-checkable - no prose-based "guidelines":
+### StateUpdates and UpdateKeys
 
-```yaml
-rules:
-  - id: "follow_clean_architecture"
-    check:
-      type: "require_pattern"
-      pattern: "clean_architecture_layers"
+A StateUpdate defines an `update_key` invoked via strict assignment syntax:
+
+```
+/name = <rhs>
+/ns.name = <rhs>
 ```
 
-### Enabled Rules Policy
+RHS parses under a restricted YAML subset and is validated against `args_schema`. Near-misses `REFUSE` and do not change state.
 
-Commands **replace** (not append to) the set of enabled rules. Only explicitly enabled rules affect behavior.
+### Commands
+
+Commands (v0.2 in the spec scaffold) are deterministic invocations `/name(args)` with explicitly declared effects (read/write state, emit output). They are not free-form “tools”; they execute only what the contract declares.
+
 
 ---
 
 ## Quick Start: Engineering Workflow
+---
 
-### 1. Define Your Module
+## Quick Start: Engineering Workflow
+
+### 1. Author a module + contract
 
 ```yaml
 [[MODULE]]
-name: backend_development
-description: "Clean architecture backend development workflow"
+module_name: backend_development
+module_version: "0.1"
+module_namespace: backend
+description: "Example workflow module"
+
+[[CONTRACT]]
+contract_id: workflow_core
+version: "0.1"
+rules:
+  - rule_id: "require_scope_for_edits"
+    effect: "REQUIRE"
+    action_id: "EDIT_EXISTING_ARTIFACT"
+    target: null
+    scope_required: true
+updates:
+  - update_id: "set_phase"
+    update_key: "phase"
+    args_schema:
+      value: string
+    effects:
+      active_profiles: ["{value}"]
+metadata:
+  autoload: true
+[[/CONTRACT]]
+[[/MODULE]]
 ```
 
-### 2. Declare Development State
+### 2. Load and activate
 
-```yaml
-[[STATE]]
-name: currentPhase
-type: WorkMode
-default: research
-[[/STATE]]
+If `metadata.autoload=true`, the contract activates at startup. Otherwise, activation is performed via declared state mutations (see spec).
 
-[[STATE]]
-name: architectureApproved
-type: Bool
-default: false
-[[/STATE]]
-```
-
-### 3. Create Phase-Gate Commands
-
-```yaml
-[[COMMAND]]
-name: start_design
-description: "Move to design phase after research"
-effects:
-  set_state:
-    - name: currentPhase
-      value: "design"
-  enable:
-    protocols: ["no_implementation"]
-[[/COMMAND]]
-
-[[COMMAND]]
-name: approve_architecture
-description: "Approve design and enable implementation"
-effects:
-  set_state:
-    - name: currentPhase
-      value: "implement"
-    - name: architectureApproved
-      value: true
-  enable:
-    protocols: ["solid_principles", "clean_architecture"]
-[[/COMMAND]]
-```
-
-### 4. Define Phase Protocols
-
-```yaml
-[[PROTOCOL]]
-protocols:
-  - id: "no_implementation"
-    description: "Block code execution during research/design"
-    rules:
-      - id: "forbid_code"
-        check:
-          type: "forbid_tool"
-          tool: "code_exec"
-      
-  - id: "solid_principles"
-    description: "Enforce SOLID in implementation"
-    rules:
-      - id: "require_di"
-        check:
-          type: "require_pattern"
-          pattern: "dependency_injection"
-[[/PROTOCOL]]
-```
-
-### 5. Execute Workflow
+### 3. Drive state with an UpdateKey
 
 ```
-User: "Let's build an auth system"
-AI: "I'll start with research phase. What are the requirements?"
-
-User: "OAuth2, JWT tokens, role-based access"
-AI: *researches patterns, presents findings*
-
-User: /start_design()
-AI: "Moved to design phase. Here's a proposed architecture..."
-
-User: /approve_architecture()
-AI: "Architecture approved. Ready to implement following clean architecture..."
+/phase = design
 ```
 
+From here, policy (rules + scope) deterministically gates what the assistant may do.
+
+
+---
+
+## Design Trade-offs
 ---
 
 ## Design Trade-offs
@@ -373,56 +355,16 @@ details:
 
 ---
 
-## Extending the Language
+## Roadmap
 
-### Custom Enums
+The v0.1 spec freezes the core domain shape: Modules, Contracts, Rules, Actions, StateUpdates (UpdateKeys), Scope, Policy, and deterministic ALLOW/REFUSE/ERROR outcomes.
 
-Define your own types:
+Additional block types and higher-level authoring conveniences may be introduced in later versions, but are not part of v0.1.
 
-```yaml
-[[ENUM]]
-name: ArchitecturePattern
-values: [clean_architecture, hexagonal, onion, layered]
-[[/ENUM]]
-```
 
-### Custom Workflows
+---
 
-Chain multiple steps together:
-
-```yaml
-[[WORKFLOW]]
-workflows:
-  - id: "safe_implementation_start"
-    steps:
-      - kind: enforce_protocol
-        ref: "architecture_approved"
-      - kind: enforce_protocol
-        ref: "solid_principles"
-      - kind: emit_response
-        ref: "implementation_ready"
-[[/WORKFLOW]]
-```
-
-### Response Templates
-
-Define structured output formats:
-
-```yaml
-[[RESPONSE]]
-responses:
-  - id: "design_proposal"
-    description: "Architecture design document"
-    constraints:
-      structure:
-        sections: ["CONTEXT", "ARCHITECTURE", "PATTERNS", "TRADEOFFS"]
-      must_include:
-        - "Clean Architecture layers"
-        - "Dependency flow"
-        - "SOLID compliance"
-[[/RESPONSE]]
-```
-
+## Contributing
 ---
 
 ## Contributing
