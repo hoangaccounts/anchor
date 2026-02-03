@@ -52,7 +52,7 @@ Modules MAY extend actions/commands/profiles/rules without changing this core.
 - `contract_id: string` (required; unique within a loaded file)
 - `version: string` (required)
 - `rules: Rule[]` (required; MAY be empty)
-- `commands: Command[]` (optional; default empty)
+- `commands: StateUpdate[]` (optional; default empty)
 - `metadata: map<string,string|bool|string[]>` (optional)
 
 **Invariants**
@@ -98,20 +98,20 @@ Modules MAY extend actions/commands/profiles/rules without changing this core.
 
 ---
 
-### 1.5 Command
+### 1.5 StateUpdate
 **Fields**
-- `command_id: string` (required; unique within its contract/module)
-- `directive_name: string` (required; the `/name(...)` token)
+- `update_id: string` (required; unique within its contract/module)
+- `update_key: string` (required; the `/name(...)` token)
 - `args_schema: map<string,string>` (required; minimal typing such as `"string"|"bool"|"int"`)
 - `effects: map<string,string|bool|string[]|object>` (required; declarative state mutations)
 - `note: string | null` (optional)
 
 **Invariants**
-- A directive invoked in chat MUST match a known `directive_name` exactly, or `ERROR`.
-- If more than one active contract defines the same `directive_name` and the directive is not namespaced, the system MUST `ERROR` with `AMBIGUOUS_COMMAND`.
+- A update_key invoked in chat MUST match a known `update_key` exactly, or `ERROR`.
+- If more than one active contract defines the same `update_key` and the update_key is not namespaced, the system MUST `ERROR` with `AMBIGUOUS_COMMAND`.
 
-**Core effect style (no directive-chaining)**
-- Feature commands MUST NOT execute core directives by text expansion.
+**Core effect style (no update_key-chaining)**
+- Feature commands MUST NOT execute core update_keys by text expansion.
 - Feature commands MAY declare effects that mutate core runtime state fields (typed effects), e.g.:
   - add/remove active profiles
   - set output format flags
@@ -120,36 +120,36 @@ Modules MAY extend actions/commands/profiles/rules without changing this core.
 
 ---
 
-### 1.6 Directive
+### 1.6 UpdateKey
 **Fields**
 - `raw_text: string` (required)
-- `directive_name: string` (required)
+- `update_key: string` (required)
 - `args: map<string, any>` (required; parsed)
 - `is_valid: boolean` (required)
 - `error_code: string | null` (optional)
 
-**Directive recognition (strict)**
-A message is a Directive only if ALL are true:
+**UpdateKey recognition (strict)**
+A message is a UpdateKey only if ALL are true:
 1) The **first character** is `/` (no leading whitespace/newlines).
 2) It matches the exact form `/name(...)` OR `/ns.name(...)`.
 3) `name` starts with a letter and contains only letters/digits/`_`/`-`.
 4) If present, `ns` starts with a letter and contains only letters/digits/`_`/`-`.
 5) Parentheses `(` and `)` are present as a matching pair.
 
-If not satisfied, the message MUST NOT be treated as a directive and MUST NOT change state.
+If not satisfied, the message MUST NOT be treated as a update_key and MUST NOT change state.
 
 **Near-miss handling**
-- If input resembles a directive but fails recognition/validation, it MUST be treated as a **near-miss**:
+- If input resembles a update_key but fails recognition/validation, it MUST be treated as a **near-miss**:
   - MUST NOT execute
   - MUST NOT change state
   - Turn outcome MUST be `REFUSE`
   - Assistant MAY provide gentle corrective feedback.
 
 ---
-## 1.9 Directive Namespacing and Resolution (v0.1)
+## 1.9 UpdateKey Namespacing and Resolution (v0.1)
 
-### Namespaced directive form
-- A directive MAY use an optional namespace prefix: `/ns.name(...)`.
+### Namespaced update_key form
+- A update_key MAY use an optional namespace prefix: `/ns.name(...)`.
 - `ns` SHOULD match a loaded module's `module_namespace`.
 
 ### Module-local names (canonicalization)
@@ -159,7 +159,7 @@ Within a loaded `[[MODULE]]` block with `module_namespace = ns`:
 - The system MUST treat all identifiers defined inside the module as module-local and MUST canonicalize them by prefixing with `ns`.
 - The system MUST canonicalize identifier values to `{ns}.{value}`.
 - Identifier values inside a module MUST NOT contain `.`.
-- The system MUST canonicalize `Command.directive_name` to `/{ns}.{value}`.
+- The system MUST canonicalize `StateUpdate.update_key` to `/{ns}.{value}`.
 
 Exceptions:
 
@@ -168,14 +168,14 @@ Exceptions:
 
 
 ### Resolution rules (deterministic)
-If a directive is namespaced:
+If a update_key is namespaced:
 - The system MUST resolve the command only within the module identified by `ns`.
 - If `ns` does not identify a loaded module namespace, the system MUST `ERROR` with `UNKNOWN_MODULE`.
 - If the module contains zero **active** contracts that define `name`, the system MUST `ERROR` with `UNKNOWN_COMMAND`.
 - If the module contains exactly one **active** contract that defines `name`, the system MUST resolve to that command.
 - If the module contains more than one **active** contract that define `name`, the system MUST `ERROR` with `AMBIGUOUS_COMMAND`.
 
-If a directive is not namespaced:
+If a update_key is not namespaced:
 - If exactly one **active** contract defines `name`, the system MUST resolve to that command.
 - If zero active contracts define `name`, the system MUST `ERROR` with `UNKNOWN_COMMAND`.
 - If more than one active contract defines `name`, the system MUST `ERROR` with `AMBIGUOUS_COMMAND`.
@@ -205,7 +205,7 @@ If a directive is not namespaced:
   - `bounds`: `{ "line_start": N, "line_end": M }`
   - `immutability`: `{ "no_changes_outside_range": true }`
 
-**Scope directives (core)**
+**Scope update_keys (core)**
 - `/proposeScope(<scope_payload>)` → registers scope as `proposed`
 - `/approveScope(scope_id="<id>")` → sets scope `approved` and active
 - `/rejectScope(scope_id="<id>")` → sets scope `rejected`
@@ -226,16 +226,16 @@ If a directive is not namespaced:
 
 ---
 
-## 2. Directive Categories (Core)
+## 2. UpdateKey Categories (Core)
 
-Each directive MUST belong to exactly one category:
+Each update_key MUST belong to exactly one category:
 
 1) **Contract lifecycle**: changes `active_contract_ids`
 2) **Scope control**: changes `active_scope_id` and scope statuses
 3) **Mode/Profile control**: changes `active_profiles` and optional profile parameters
 
 **Invariant**
-- Directives MUST only change AICL runtime state (contracts, profiles, scope). They MUST NOT imply external execution.
+- UpdateKeys MUST only change AICL runtime state (contracts, profiles, scope). They MUST NOT imply external execution.
 
 ---
 
@@ -292,14 +292,14 @@ Each user turn MUST be atomic:
   - MUST perform no contract/profile/scope state changes
 - If outcome is `REFUSE`:
   - MUST perform no artifact changes
-  - Directive state changes MAY occur only if the user input was a valid directive
+  - UpdateKey state changes MAY occur only if the user input was a valid update_key
 - If outcome is `ALLOW`:
   - MUST apply all permitted actions for the turn as a single unit
   - MUST NOT partially apply changes
 
 Deterministic order of operations:
-1) Parse directives (if any)
-2) Validate directive(s) (invalid/unknown identities → `ERROR`)
+1) Parse update_keys (if any)
+2) Validate update_key(s) (invalid/unknown identities → `ERROR`)
 3) Compute effective Policy + detect conflicts (conflict → `ERROR`)
 4) Classify requested actions
 5) Enforce permissions/requirements/scope (violation → `REFUSE`)
@@ -320,7 +320,7 @@ Each turn MUST classify as exactly one of:
 - Unknown contract/profile/action/command identity
 - Missing/invalid required fields in loaded artifacts
 - Rule conflicts (type A or B)
-- Invalid directive structure that is not a near-miss classification case
+- Invalid update_key structure that is not a near-miss classification case
 
 **Semantics**
 - MUST halt and be atomic abort (no changes).
@@ -331,7 +331,7 @@ Each turn MUST classify as exactly one of:
 - DENY rules
 - REQUIRE rules with unmet conditions
 - Missing approved scope for `change_existing` actions
-- Near-miss directives
+- Near-miss update_keys
 
 **Semantics**
 - MUST not perform forbidden actions or artifact mutations.
