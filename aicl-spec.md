@@ -43,10 +43,7 @@ A Module is a namespace container that may contain: Actions, Commands, Profiles,
 **Invariants**
 - `module_name` MUST be non-empty.
 - `module_namespace` MUST be non-empty.
-- Duplicate `module_namespace` among loaded modules MUST produce `ERROR### 1.1.a Commands (v0.2)
-- A `Module` MAY define `commands: Command[]`.
-- Each `Command` MUST belong to exactly one Module.
-- There MUST be no global Command identifiers outside a Module namespace.
+- Duplicate `module_namespace` among loaded modules MUST produce `ERROR`.
 
 **Module namespace and canonicalization (v0.1)**
 
@@ -74,18 +71,6 @@ A Module is a namespace container that may contain: Actions, Commands, Profiles,
 - If exactly one active `StateUpdate.update_key` matches the invocation, the system MUST resolve to that StateUpdate.
 - If zero active `StateUpdate.update_key` values match, the system MUST `ERROR` with `UNKNOWN_UPDATE_KEY`.
 - If more than one active `StateUpdate.update_key` matches, the system MUST `ERROR` with `AMBIGUOUS_UPDATE_KEY`.
-
-
-**Command invocation resolution (v0.2)**
-
-- A message that matches Command invocation syntax MUST be resolved against the set of active `Command.command_key` values.
-- Command resolution MUST mirror UpdateKey resolution semantics.
-- If an invocation uses `/ns.command_key(args)`, the system MUST resolve only within the loaded module with `module_namespace = ns`.
-  - If `ns` does not identify a loaded module namespace, the system MUST `ERROR` with `UNKNOWN_MODULE`.
-- If an invocation uses `/command_key(args)` (no namespace), the system MUST resolve across all loaded modules.
-- If exactly one active `Command.command_key` matches the invocation, the system MUST resolve to that Command.
-- If zero active `Command.command_key` values match, the system MUST `ERROR` with `UNKNOWN_COMMAND`.
-- If more than one active `Command.command_key` matches, the system MUST `ERROR` with `AMBIGUOUS_COMMAND`.
 
 
 ---
@@ -164,35 +149,6 @@ A Module is a namespace container that may contain: Actions, Commands, Profiles,
 
 ---
 
-### 1.5.a Command (v0.2)
-
-**Fields**
-- `command_id: string` (required; fully-qualified; used by policy)
-- `command_key: string` (required; user-facing invocation name)
-- `args_schema: map<string, any>` (required)
-- `result_schema: map<string, any>` (optional)
-- `effects: Effect[]` (required)
-- `render: object | null` (optional; deterministic render contract)
-
-**Invariants**
-- A Command MAY perform only declared effects.
-- A Command is read-only unless `write_state` is declared.
-- Commands MUST NOT implicitly mutate state.
-- Output MUST be derived solely from `result_schema` and `render`.
-
----
-
-### 1.5.b CommandCall (v0.2)
-
-**Fields**
-- `command_key: string`
-- `args: map<string, any>`
-
-**Invariant**
-- A CommandCall represents queued intent, not execution.
-
----
-
 ### 1.6 UpdateKey
 **Fields**
 - `raw_text: string` (required)
@@ -216,42 +172,6 @@ If not satisfied, the message MUST NOT be treated as an update_key and MUST NOT 
 
 ---
 
-### 1.6.a Command Recognition (v0.2)
-
-A message is a Command invocation only if ALL are true:
-1) The first character is `/` (no leading whitespace/newlines).
-2) It matches the exact form `/name(args)` OR `/ns.name(args)`.
-3) `name` starts with a letter and contains only letters/digits/`_`/`-`.
-4) If present, `ns` starts with a letter and contains only letters/digits/`_`/`-`.
-5) Parentheses MUST be present and balanced.
-6) The message MUST NOT match UpdateKey recognition.
-
-If not satisfied, the message MUST NOT be treated as a CommandCall.
-
-
-**RHS parsing (deterministic)**
-- `<rhs>` MUST be parsed using the restricted YAML 1.2 subset.
-- The YAML subset MUST exclude anchors, aliases, tags, multi-document streams, and implicit typing beyond string, boolean, and integer.
-- Unquoted scalar values MUST be treated as strings unless they match the boolean or integer grammar of the restricted YAML subset.
-- If `<rhs>` parses to a mapping, `UpdateKey.args` MUST be that mapping.
-- If `<rhs>` parses to a scalar, `UpdateKey.args` MUST be `{ "value": <scalar> }`.
-- If `<rhs>` fails to parse under the restricted subset, the input MUST be treated as a near-miss.
-**Args validation (strict)**
-- The system MUST validate `UpdateKey.args` against the resolved `StateUpdate.args_schema`.
-- If `UpdateKey.args` is missing any required key defined in `args_schema`, the input MUST be treated as a near-miss.
-- If `UpdateKey.args` contains keys not defined in `args_schema`, the input MUST be treated as a near-miss.
-- If `<rhs>` parses to an empty mapping `{}` and `args_schema` is non-empty, the input MUST be treated as a near-miss.
-- If `args_schema` is empty, `UpdateKey.args` MUST be an empty mapping.
-
-**Near-miss handling**
-- If input resembles an update_key but fails recognition/validation, it MUST be treated as a **near-miss**:
-  - MUST report a user-visible refusal message
-  - MUST NOT execute
-  - MUST NOT change state
-  - Turn outcome MUST be `REFUSE`
-  - Assistant MAY provide gentle corrective feedback.
-
----
 ### 1.7 Scope
 **Fields**
 - `scope_id: string` (required)
@@ -293,20 +213,6 @@ If not satisfied, the message MUST NOT be treated as a CommandCall.
 
 **Invariants**
 - If conflicts exist among active contracts’ rules for the same conflict key, the system MUST `ERROR`.
-
----
-
-### 1.8.a Command Effects (v0.2)
-
-Commands MUST declare effects explicitly. The core effect vocabulary is closed:
-
-- `emit_output`
-- `emit_artifact(kind)`
-- `read_history(selector)`
-- `read_state(paths[])`
-- `write_state(paths[])`
-
-Commands are read-only unless `write_state` is declared.
 
 ---
 
@@ -460,3 +366,109 @@ Compute Policy:
   - Turn outcome MUST be `REFUSE`
   - Assistant MAY propose a scope (machine-checkable) for explicit user approval
   - Assistant MUST NOT perform the change in the same turn unless scope is already approved.
+---
+
+## Appendix A — Draft v0.2 Extensions
+
+These sections are **draft v0.2** extensions. They are kept together here to keep the v0.1 core clean and scannable.
+
+### A.1 Commands (v0.2)
+- A `Module` MAY define `commands: Command[]`.
+- Each `Command` MUST belong to exactly one Module.
+- There MUST be no global Command identifiers outside a Module namespace.
+
+
+### A.2 Command invocation resolution (v0.2)
+
+- A message that matches Command invocation syntax MUST be resolved against the set of active `Command.command_key` values.
+- Command resolution MUST mirror UpdateKey resolution semantics.
+- If an invocation uses `/ns.command_key(args)`, the system MUST resolve only within the loaded module with `module_namespace = ns`.
+  - If `ns` does not identify a loaded module namespace, the system MUST `ERROR` with `UNKNOWN_MODULE`.
+- If an invocation uses `/command_key(args)` (no namespace), the system MUST resolve across all loaded modules.
+- If exactly one active `Command.command_key` matches the invocation, the system MUST resolve to that Command.
+- If zero active `Command.command_key` values match, the system MUST `ERROR` with `UNKNOWN_COMMAND`.
+- If more than one active `Command.command_key` matches, the system MUST `ERROR` with `AMBIGUOUS_COMMAND`.
+
+
+
+### A.3 Command (v0.2)
+
+**Fields**
+- `command_id: string` (required; fully-qualified; used by policy)
+- `command_key: string` (required; user-facing invocation name)
+- `args_schema: map<string, any>` (required)
+- `result_schema: map<string, any>` (optional)
+- `effects: Effect[]` (required)
+- `render: object | null` (optional; deterministic render contract)
+
+**Invariants**
+- A Command MAY perform only declared effects.
+- A Command is read-only unless `write_state` is declared.
+- Commands MUST NOT implicitly mutate state.
+- Output MUST be derived solely from `result_schema` and `render`.
+
+---
+
+
+### A.4 CommandCall (v0.2)
+
+**Fields**
+- `command_key: string`
+- `args: map<string, any>`
+
+**Invariant**
+- A CommandCall represents queued intent, not execution.
+
+---
+
+
+### A.5 Command Recognition (v0.2)
+
+A message is a Command invocation only if ALL are true:
+1) The first character is `/` (no leading whitespace/newlines).
+2) It matches the exact form `/name(args)` OR `/ns.name(args)`.
+3) `name` starts with a letter and contains only letters/digits/`_`/`-`.
+4) If present, `ns` starts with a letter and contains only letters/digits/`_`/`-`.
+5) Parentheses MUST be present and balanced.
+6) The message MUST NOT match UpdateKey recognition.
+
+If not satisfied, the message MUST NOT be treated as a CommandCall.
+
+
+**RHS parsing (deterministic)**
+- `<rhs>` MUST be parsed using the restricted YAML 1.2 subset.
+- The YAML subset MUST exclude anchors, aliases, tags, multi-document streams, and implicit typing beyond string, boolean, and integer.
+- Unquoted scalar values MUST be treated as strings unless they match the boolean or integer grammar of the restricted YAML subset.
+- If `<rhs>` parses to a mapping, `UpdateKey.args` MUST be that mapping.
+- If `<rhs>` parses to a scalar, `UpdateKey.args` MUST be `{ "value": <scalar> }`.
+- If `<rhs>` fails to parse under the restricted subset, the input MUST be treated as a near-miss.
+**Args validation (strict)**
+- The system MUST validate `UpdateKey.args` against the resolved `StateUpdate.args_schema`.
+- If `UpdateKey.args` is missing any required key defined in `args_schema`, the input MUST be treated as a near-miss.
+- If `UpdateKey.args` contains keys not defined in `args_schema`, the input MUST be treated as a near-miss.
+- If `<rhs>` parses to an empty mapping `{}` and `args_schema` is non-empty, the input MUST be treated as a near-miss.
+- If `args_schema` is empty, `UpdateKey.args` MUST be an empty mapping.
+
+**Near-miss handling**
+- If input resembles an update_key but fails recognition/validation, it MUST be treated as a **near-miss**:
+  - MUST report a user-visible refusal message
+  - MUST NOT execute
+  - MUST NOT change state
+  - Turn outcome MUST be `REFUSE`
+  - Assistant MAY provide gentle corrective feedback.
+
+---
+
+### A.6 Command Effects (v0.2)
+
+Commands MUST declare effects explicitly. The core effect vocabulary is closed:
+
+- `emit_output`
+- `emit_artifact(kind)`
+- `read_history(selector)`
+- `read_state(paths[])`
+- `write_state(paths[])`
+
+Commands are read-only unless `write_state` is declared.
+
+---
