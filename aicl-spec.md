@@ -321,6 +321,13 @@ Commands are read-only unless `write_state` is declared.
 - If the turn outcome is REFUSE or ERROR:
   - The assistant MUST output only the corresponding REFUSE or ERROR payload and MUST NOT include any additional conversational text.
 
+- Exact template fidelity (deterministic rendering):
+  - If `Command.render.format = "text"` and `Command.render.template` is present:
+    - The rendered output MUST equal the concatenation of all `template` lines joined with the single character `\n`.
+    - The rendered output MUST include every template line, in order, including empty-string lines.
+    - The runtime MUST NOT transform, normalize, reflow, trim, or substitute any characters from the template (including quotes/apostrophes, punctuation, emoji, and whitespace).
+    - If the runtime cannot emit the template exactly as specified, the turn outcome MUST be `ERROR` with error code `RENDER_MISMATCH`.
+
 ---
 
 
@@ -525,4 +532,3 @@ Compute Policy:
   - Assistant MAY propose a scope (machine-checkable) for explicit user approval
   - Assistant MUST NOT perform the change in the same turn unless scope is already approved.
 ---
-
