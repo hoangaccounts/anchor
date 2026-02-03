@@ -176,12 +176,20 @@ A message is an UpdateKey only if ALL are true:
 1) The **first character** is `/` (no leading whitespace/newlines).
 2) It matches the exact form `/name = <rhs>` OR `/ns.name = <rhs>`.
 3) `name` starts with a letter and contains only letters/digits/`_`/`-`.
-4) If present, `ns` starts with a letter and contains only letters/digits/`_`/`-`.
+4) If present, `ns` is a dot-separated namespace path:
+   - `ns` MUST start with a letter.
+   - `ns` MUST match: `seg ( "." seg )*`
+   - where `seg` starts with a letter and contains only letters/digits/`_`/`-`.
 5) The delimiter MUST be `=` with at least one space on each side.
 6) `<rhs>` MUST be non-empty after trimming.
 7) `<rhs>` MUST be contained on the same line as the update_key.
 8) The message MUST NOT contain `(` or `)` characters anywhere.
 If not satisfied, the message MUST NOT be treated as an update_key and MUST NOT change state.
+
+**Namespace split rule (deterministic)**
+- For `/ns.name = <rhs>`, the system MUST split on the last `.`:
+  - `name` is the substring after the last `.`
+  - `ns` is the substring before the last `.`
 
 
 ---
@@ -246,11 +254,19 @@ A message is a Command invocation only if ALL are true:
 1) The first character is `/` (no leading whitespace/newlines).
 2) It matches the exact form `/name(args)` OR `/ns.name(args)`.
 3) `name` starts with a letter and contains only letters/digits/`_`/`-`.
-4) If present, `ns` starts with a letter and contains only letters/digits/`_`/`-`.
+4) If present, `ns` is a dot-separated namespace path:
+   - `ns` MUST start with a letter.
+   - `ns` MUST match: `seg ( "." seg )*`
+   - where `seg` starts with a letter and contains only letters/digits/`_`/`-`.
 5) Parentheses MUST be present and balanced.
 6) The message MUST NOT match UpdateKey recognition.
 
 If not satisfied, the message MUST NOT be treated as a CommandCall.
+
+**Namespace split rule (deterministic)**
+- For `/ns.name(args)`, the system MUST split on the last `.`:
+  - `name` is the substring after the last `.`
+  - `ns` is the substring before the last `.`
 
 
 **RHS parsing (deterministic)**
