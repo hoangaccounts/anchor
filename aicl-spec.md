@@ -1,7 +1,7 @@
 # AICL Core Domain v0.1 — Shape (Generator Scaffold)
 
 This document freezes the **v0.1 shape** (domain objects, invariants, lifecycle, and deterministic semantics).
-Modules MAY extend actions/commands/profiles/rules without changing this core.
+A Module is a namespace container that may contain: Actions, Commands, Profiles, Rules, and Contracts. Contracts may contain StateUpdates.
 
 ---
 
