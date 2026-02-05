@@ -129,6 +129,56 @@ The value isn’t perfect accuracy — it’s **clear structure you can reuse**.
 
 ---
 
+---
+
+## Another Example (Non‑Engineering Workflow)
+
+AICL is not limited to software design.  
+The same command + workflow idea applies to reviews, meetings, and decision-making.
+
+```
+You: (load a meeting-notes workflow module)
+
+You: /clarify()
+AI:
+=============================
+ ACTIVATING CLARIFICATION MODE
+=============================
+• Goal: understand context before summarizing
+• Output: questions only
+
+AI: Before we summarize, a few clarifying questions:
+    - Who is the audience for these notes?
+    - Is this informational or decision-making?
+    - Do we need action items or just a recap?
+
+You: /summarize(title="Product Sync — Q1 Planning")
+AI:
+=================================================
+        PRODUCT SYNC — SUMMARY
+=================================================
+
+CONTEXT
+• Quarterly planning sync for product and engineering
+
+KEY DISCUSSIONS
+• Feature scope for Q1
+• Resource constraints
+• Timeline risks
+
+DECISIONS
+• Ship MVP by end of March
+• Defer non-critical features
+
+ACTION ITEMS
+• Finalize roadmap (PM)
+• Validate capacity (Eng)
+• Schedule follow-up review
+```
+
+Here, the value isn’t code discipline — it’s **shared structure**.
+Everyone gets the same shaped output, every time.
+
 ## Quick Overview (What This Is)
 
 AICL lets you turn free-form chat into an **explicit protocol**:
