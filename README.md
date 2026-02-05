@@ -37,7 +37,7 @@ You: 😤
 
 ---
 
-## What This Looks Like With AICL
+## Getting Started - What This Looks Like With Anchor
 
 Same conversation. Different behavior.
 
@@ -89,7 +89,7 @@ You: Approved. Implement it
 AI: Generates code consistent with the agreed architecture
 ```
 
-AICL doesn’t make the assistant “perfect.”  
+Anchor doesn’t make the assistant “perfect.”  
 It makes the workflow easier to repeat — and drift easier to detect and recover from.
 
 ---
@@ -138,7 +138,7 @@ The value isn’t perfect accuracy — it’s **clear structure you can reuse**.
 
 ## Another Example (Non‑Engineering Workflow)
 
-AICL is not limited to software design.  
+Anchor is not limited to software design.  
 The same command + workflow idea applies to reviews, meetings, and decision-making.
 
 ```
@@ -186,7 +186,7 @@ Everyone gets the same shaped output, every time.
 
 ## Quick Overview (What This Is)
 
-AICL lets you turn free-form chat into an **explicit protocol**:
+Anchor lets you turn free-form chat into an **explicit protocol**:
 
 - **Commands**: named operations like `/clarify()`, `/design()`, `/code()`, `/summarize()`
 - **State updates**: explicit context (e.g., `/phase = design`)
@@ -207,7 +207,7 @@ It lets you define:
 - how output should be formatted when structure matters,
 - and what happens when boundaries are crossed (**ALLOW / REFUSE / ERROR**).
 
-> In AICL, a “contract” is a declarative bundle of constraints that bounds and re-anchors behavior within a scoped context — not a guarantee of global correctness.
+> In Anchor, a “contract” is a declarative bundle of constraints that bounds and re-anchors behavior within a scoped context — not a guarantee of global correctness.
 
 ---
 
@@ -215,20 +215,20 @@ It lets you define:
 
 Anchor is **not** an attempt to fully control or formalize AI behavior in the general case.
 
-Through building and using AICL, a few constraints became clear:
-- AI behavior is probabilistic and entropy-driven
-- Long-running sessions drift, even with strong initial constraints
-- Natural language instructions alone cannot reliably enforce discipline
+Through building and using Anchor, a few constraints became clear:
+- LLMs are probabilistic.
+- Long sessions drift.
+- Natural language alone can’t reliably enforce discipline.
 
-Rather than treating these as failures, AICL treats them as **design facts**.
+Rather than treating these as failures, Anchor treats them as **design facts**.
 
-### What AICL *Is*
+### What Anchor *Is*
 - A personal constraint DSL for AI-assisted work
 - A way to encode known AI failure modes (“AI smells”)
 - A repeatable command surface you can reapply across chats
 - A tool for attachable structure, not permanent control
 
-### What AICL Is *Not*
+### What Anchor Is *Not*
 - Not a guarantee of global determinism
 - Not a replacement for judgment or oversight
 - Not a commercial governance or compliance system
@@ -237,7 +237,7 @@ Rather than treating these as failures, AICL treats them as **design facts**.
 
 ## Ongoing Work
 
-AICL is being explored along two parallel tracks:
+Anchor is being explored along two parallel tracks:
 
 ### 1) AI Smells
 A catalog of recurring failure modes observed during real LLM-assisted work.
@@ -250,7 +250,7 @@ Reusable AICL modules designed to counter specific smells and re-anchor behavior
 
 ---
 
-## Core Domain (v0.2)
+## What is AICL?
 
 AICL defines a concrete, end-user-authorable contract language with the following primitives:
 
@@ -262,7 +262,7 @@ AICL defines a concrete, end-user-authorable contract language with the followin
 - **Scope** — Machine-checkable bounds for mutating actions
 - **Outcomes** — Every turn resolves to `ALLOW`, `REFUSE`, or `ERROR`
 
-The full normative specification lives in `aicl-spec.md` (v0.2).
+The full specification lives in `aicl-spec.md` (v0.2).
 
 ---
 
