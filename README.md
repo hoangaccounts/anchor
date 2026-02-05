@@ -250,7 +250,7 @@ Reusable AICL modules designed to counter specific smells and re-anchor behavior
 
 ---
 
-## What is AICL?
+## What is AI Contract Language (AICL)?
 
 AICL defines a concrete, end-user-authorable contract language with the following primitives:
 
