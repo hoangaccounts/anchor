@@ -188,7 +188,7 @@ Everyone gets the same shaped output, every time.
 
 Anchor lets you turn free-form chat into an **explicit protocol**:
 
-- **Commands**: named operations like `/clarify()`, `/design()`, `/code()`, `/summarize()`
+- **Commands**: named operations like `/clarify()`, `/review()`, `/summarize()`
 - **State updates**: explicit context (e.g., `/phase = design`)
 - **Rules**: boundaries that allow, refuse, or error when crossed
 - **Rendering**: consistent, readable output when structure matters
