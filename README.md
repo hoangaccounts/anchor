@@ -39,20 +39,46 @@ Same conversation. Different behavior.
 ```
 You: (load an engineering workflow module)
 
+You: /clarify()
+AI:
+=============================
+ ACTIVATING CLARIFICATION MODE
+=============================
+• Goal: understand intent before generating solutions
+• Constraints: no code, no assumptions
+• Output: questions, scope, and success criteria only
+
+AI: Let's clarify a few things before we proceed:
+    - Who are the users of this auth system?
+    - Any regulatory or security constraints?
+    - Expected scale and environments?
+
 You: /phase = design
-AI: OK — phase set to design
+AI:
+-----------------------------
+ PHASE: DESIGN
+-----------------------------
 
 You: Let's analyze the requirements for this auth system
 AI: Presents requirements, constraints, and open questions (no code)
 
 You: Good. Now let's design the architecture
-AI: Proposes a clean architecture with clear boundaries (no code)
+AI:
+-----------------------------
+ DESIGN OUTPUT
+-----------------------------
+• Layers: API → Domain → Data
+• Auth mechanism: token-based
+• Boundaries: no framework leakage into domain
 
 You: Approved. Implement it
 AI: REFUSE — code generation is not allowed in phase=design
 
 You: /phase = implement
-AI: OK — phase set to implement
+AI:
+-----------------------------
+ PHASE: IMPLEMENT
+-----------------------------
 
 You: Approved. Implement it
 AI: Generates code consistent with the agreed architecture
@@ -63,14 +89,54 @@ It makes the workflow easier to repeat — and drift easier to detect and recove
 
 ---
 
+## One More Command (Structured Summary)
+
+At any point, you can switch from interaction to **structured output**.
+
+```
+You: /summarize(title="Auth System Design Session")
+AI:
+=================================================
+        AUTH SYSTEM — DESIGN SUMMARY
+=================================================
+
+   ___    _   _ _____ _   _ 
+  / _ \  | | | |_   _| | | |
+ | | | | | | | | | | | |_| |
+ | |_| | | |_| | | | |  _  |
+  \___/   \___/  |_| |_| |_|
+
+GOALS
+• Secure authentication with clear boundaries
+• Maintain testable, framework-agnostic domain logic
+
+KEY DECISIONS
+• Token-based authentication
+• Layered architecture (API / Domain / Data)
+• Explicit phase gating before implementation
+
+OPEN QUESTIONS
+• Token refresh strategy
+• Password reset and recovery flows
+
+NEXT STEPS
+• Finalize auth flows
+• Implement repositories and services
+• Add tests per layer
+```
+
+The value isn’t perfect accuracy — it’s **clear structure you can reuse**.
+
+---
+
 ## Quick Overview (What This Is)
 
 AICL lets you turn free-form chat into an **explicit protocol**:
 
-- **Commands**: operations you invoke (e.g., `/requirements(...)`, `/architecture(...)`, `/code(...)`, `/summarize(...)`)
+- **Commands**: named operations like `/clarify()`, `/design()`, `/code()`, `/summarize()`
 - **State updates**: explicit context (e.g., `/phase = design`)
 - **Rules**: boundaries that allow, refuse, or error when crossed
-- **Rendering**: consistent output shapes when you want them (summaries, checklists, reports)
+- **Rendering**: consistent, readable output when structure matters
 
 Instead of relying on “please behave” prompts, you define a small command surface and rules that reduce hidden assumptions and mode switching.
 
@@ -87,39 +153,6 @@ It lets you define:
 - and what happens when boundaries are crossed (**ALLOW / REFUSE / ERROR**).
 
 > In AICL, a “contract” is a declarative bundle of constraints that bounds and re-anchors behavior within a scoped context — not a guarantee of global correctness.
-
----
-
-## Another Example (Pretty Output)
-
-AICL is also useful when you want reusable structure, not just workflow discipline.
-
-```
-You: (load a summarize/review module)
-
-You: /summarize(title="Auth System Design")
-AI:
-====================
-  AUTH SYSTEM SUMMARY
-====================
-
-• Goal
-  - Secure user authentication with clear separation of concerns
-
-• Decisions
-  - Token-based auth
-  - Layered architecture (API / domain / data)
-
-• Open Questions
-  - Token refresh strategy
-  - Password reset flow
-
-• Next Steps
-  - Finalize auth flows
-  - Move to implementation phase
-```
-
-The value isn’t perfect accuracy — it’s **consistent structure you can reuse**.
 
 ---
 
