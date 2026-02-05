@@ -257,14 +257,18 @@ AICL defines a concrete, end-user-authorable contract language with the followin
 - **Scope** — Machine-checkable bounds for mutating actions
 - **Outcomes** — Every turn resolves to `ALLOW`, `REFUSE`, or `ERROR`
 
-The full normative specification lives in `aicl-spec-v0.2.md`.
+The full normative specification lives in `aicl-spec.md` (v0.2).
 
 ---
 
 ## License
 
-[Your license here]
+This repository uses a split license model:
+
+- **Code, tooling, and example modules**: MIT License (see `LICENSE`)
+- **AICL specification** (`aicl-spec.md`): Creative Commons Attribution 4.0 (CC BY 4.0) (see `LICENSE-SPEC`)
+
 
 ## Author
 
-[Your details here]
+Hoang Nguyen
