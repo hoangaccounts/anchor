@@ -1,0 +1,149 @@
+[[MODULE]]
+module_name: AICL Stdlib Format
+module_version: 0.1.0
+module_namespace: std.format
+description: Core-core formatting primitives for deterministic output.
+
+[[CONTRACT]]
+contract_id: stdlib_format
+version: 0.2.0
+rules: []
+updates: []
+metadata:
+  autoload: true
+[[/CONTRACT]]
+[[COMMAND]]
+command_id: hr
+command_key: hr
+description: Render a horizontal rule line.
+args_schema:
+  type: object
+  properties:
+    style:
+      type: string
+    width:
+      type: integer
+  required:
+    - style
+    - width
+result_schema:
+  type: object
+  properties:
+    output:
+      type: string
+  required:
+    - output
+effects:
+  - emit_output
+render:
+  template:
+    - "{{output}}"
+[[/COMMAND]]
+
+[[COMMAND]]
+command_id: header
+command_key: header
+description: Render a header with rules above/below.
+args_schema:
+  type: object
+  properties:
+    title:
+      type: string
+    style:
+      type: string
+  required:
+    - title
+    - style
+result_schema:
+  type: object
+  properties:
+    output:
+      type: string
+  required:
+    - output
+effects:
+  - emit_output
+render:
+  template:
+    - "{{output}}"
+[[/COMMAND]]
+
+[[COMMAND]]
+command_id: section
+command_key: section
+description: Render a section heading.
+args_schema:
+  type: object
+  properties:
+    title:
+      type: string
+  required:
+    - title
+result_schema:
+  type: object
+  properties:
+    output:
+      type: string
+  required:
+    - output
+effects:
+  - emit_output
+render:
+  template:
+    - "{{output}}"
+[[/COMMAND]]
+
+[[COMMAND]]
+command_id: list
+command_key: list
+description: Render a bullet list.
+args_schema:
+  type: object
+  properties:
+    items:
+      type: array
+    bullet:
+      type: string
+  required:
+    - items
+    - bullet
+result_schema:
+  type: object
+  properties:
+    output:
+      type: string
+  required:
+    - output
+effects:
+  - emit_output
+render:
+  template:
+    - "{{output}}"
+[[/COMMAND]]
+
+[[COMMAND]]
+command_id: block
+command_key: block
+description: Render a verbatim block wrapper.
+args_schema:
+  type: object
+  properties:
+    text:
+      type: string
+  required:
+    - text
+result_schema:
+  type: object
+  properties:
+    output:
+      type: string
+  required:
+    - output
+effects:
+  - emit_output
+render:
+  template:
+    - "{{output}}"
+[[/COMMAND]]
+
+[[/MODULE]]

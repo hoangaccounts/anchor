@@ -1,0 +1,120 @@
+[[MODULE]]
+module_name: AICL Stdlib Core
+module_version: 0.1.0
+module_namespace: std.core
+description: Core-core baseline runtime utilities (non-opinionated).
+
+[[CONTRACT]]
+contract_id: stdlib_core
+version: 0.2.0
+rules: []
+updates: []
+metadata:
+  autoload: true
+[[/CONTRACT]]
+[[COMMAND]]
+command_id: help
+command_key: help
+description: List core-core commands and one-line usage.
+args_schema:
+  type: object
+  properties: {}
+  required: []
+result_schema:
+  type: object
+  properties:
+    output:
+      type: string
+  required:
+    - output
+effects:
+  - emit_output
+render:
+  template:
+    - "{{output}}"
+[[/COMMAND]]
+
+[[COMMAND]]
+command_id: version
+command_key: version
+description: Return stdlib and module version information.
+args_schema:
+  type: object
+  properties: {}
+  required: []
+result_schema:
+  type: object
+  properties:
+    output:
+      type: string
+  required:
+    - output
+effects:
+  - emit_output
+render:
+  template:
+    - "{{output}}"
+[[/COMMAND]]
+
+[[COMMAND]]
+command_id: status
+command_key: status
+description: Human-readable runtime heartbeat (active modules/contracts/commands).
+args_schema:
+  type: object
+  properties: {}
+  required: []
+result_schema:
+  type: object
+  properties:
+    output:
+      type: string
+  required:
+    - output
+effects:
+  - emit_output
+render:
+  template:
+    - "{{output}}"
+[[/COMMAND]]
+
+[[COMMAND]]
+command_id: echo
+command_key: echo
+description: Echo back the provided text exactly.
+args_schema:
+  type: object
+  properties:
+    text:
+      type: string
+  required:
+    - text
+result_schema:
+  type: object
+  properties:
+    output:
+      type: string
+  required:
+    - output
+effects:
+  - emit_output
+render:
+  template:
+    - "{{output}}"
+[[/COMMAND]]
+
+[[COMMAND]]
+command_id: noop
+command_key: noop
+description: No operation; useful to confirm a command is recognized.
+args_schema:
+  type: object
+  properties: {}
+  required: []
+effects:
+render:
+  template:
+    - "{{output}}"
+[[/COMMAND]]
+
+[[/MODULE]]

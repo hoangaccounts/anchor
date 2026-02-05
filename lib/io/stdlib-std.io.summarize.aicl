@@ -1,0 +1,72 @@
+[[MODULE]]
+module_name: AICL Stdlib IO Summarize
+module_version: 0.1.0
+module_namespace: std.io
+description: Summarize chat or text into a downloadable artifact + continuation prompt.
+
+[[CONTRACT]]
+contract_id: stdlib_io_summarize
+version: 0.2.0
+rules:
+  - id: render_lock
+    description: When invoked, emit only the rendered template output (no extra commentary).
+updates: []
+metadata:
+  autoload: true
+[[/CONTRACT]]
+
+[[COMMAND]]
+command_id: summarize
+command_key: summarize
+description: Produce a summary artifact (brief|full) and a continuation prompt.
+args_schema:
+  type: object
+  additionalProperties: false
+  properties:
+    mode:
+      type: string
+      enum: [brief, full]
+      default: brief
+    scope:
+      type: string
+      enum: [chat, text]
+      default: chat
+    input:
+      type: string
+      description: Required when scope=text; ignored when scope=chat.
+    output:
+      type: string
+      enum: [preview, download, both]
+      default: download
+    includeContinuationPrompt:
+      type: boolean
+      default: true
+    fileName:
+      type: string
+      description: Optional override. If omitted, use a reasonable default.
+  required: []
+result_schema:
+  type: object
+  additionalProperties: false
+  properties:
+    file_name:
+      type: string
+    file_content:
+      type: string
+    screen_output:
+      type: string
+  required:
+    - file_name
+    - file_content
+    - screen_output
+effects:
+  - emit_output
+render:
+  template:
+    - "BEGIN_AICL_SUMMARY_FILE {{file_name}}"
+    - "{{file_content}}"
+    - "END_AICL_SUMMARY_FILE"
+    - ""
+    - "{{screen_output}}"
+[[/COMMAND]]
+[[/MODULE]]

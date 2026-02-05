@@ -1,0 +1,125 @@
+[[MODULE]]
+module_name: AICL Stdlib Registry
+module_version: 0.1.0
+module_namespace: std.registry
+description: Core-core introspection commands (read-only).
+
+[[CONTRACT]]
+contract_id: stdlib_registry
+version: 0.2.0
+rules: []
+updates: []
+metadata:
+  autoload: true
+[[/CONTRACT]]
+[[COMMAND]]
+command_id: dump
+command_key: dump
+description: Dump a human-friendly registry snapshot (defaults to text).
+args_schema:
+  type: object
+  properties: {}
+  required: []
+result_schema:
+  type: object
+  properties:
+    output:
+      type: string
+  required:
+    - output
+effects:
+  - emit_output
+render:
+  template:
+    - "{{output}}"
+[[/COMMAND]]
+
+[[COMMAND]]
+command_id: modules
+command_key: modules
+description: List loaded modules (stable sort).
+args_schema:
+  type: object
+  properties: {}
+  required: []
+result_schema:
+  type: object
+  properties:
+    output:
+      type: string
+  required:
+    - output
+effects:
+  - emit_output
+render:
+  template:
+    - "{{output}}"
+[[/COMMAND]]
+
+[[COMMAND]]
+command_id: contracts
+command_key: contracts
+description: List loaded contracts (stable sort).
+args_schema:
+  type: object
+  properties: {}
+  required: []
+result_schema:
+  type: object
+  properties:
+    output:
+      type: string
+  required:
+    - output
+effects:
+  - emit_output
+render:
+  template:
+    - "{{output}}"
+[[/COMMAND]]
+
+[[COMMAND]]
+command_id: commands
+command_key: commands
+description: List active commands (stable sort).
+args_schema:
+  type: object
+  properties: {}
+  required: []
+result_schema:
+  type: object
+  properties:
+    output:
+      type: string
+  required:
+    - output
+effects:
+  - emit_output
+render:
+  template:
+    - "{{output}}"
+[[/COMMAND]]
+
+[[COMMAND]]
+command_id: updates
+command_key: updates
+description: List available UpdateKeys (stable sort).
+args_schema:
+  type: object
+  properties: {}
+  required: []
+result_schema:
+  type: object
+  properties:
+    output:
+      type: string
+  required:
+    - output
+effects:
+  - emit_output
+render:
+  template:
+    - "{{output}}"
+[[/COMMAND]]
+
+[[/MODULE]]
