@@ -1,9 +1,14 @@
-# AI Contract Language (AICL)
+# Anchor
 
-**A constraint-based contract language for disciplined AI-assisted engineering**
+**Structured protocols for disciplined, repeatable AI-assisted work**
+
+Built on the AI Contract Language (AICL).
 
 Version: 0.2  
 Status: **Experimental** — interfaces and behavior may change as the project evolves
+
+**Why “Anchor”?**
+Because AI sessions drift. Anchor is about adding stability when things start to wander — and doing it in a way that’s intentional, temporary, and scoped. You “drop anchor” when structure matters. If the conversation slips, you can re-anchor and continue with the same shape.
 
 ---
 
@@ -268,7 +273,7 @@ This repository uses a split license model:
 - **Code, tooling, and example modules**: MIT License (see `LICENSE`)
 - **AICL specification** (`aicl-spec.md`): Creative Commons Attribution 4.0 (CC BY 4.0) (see `LICENSE-SPEC`)
 
-
 ## Author
 
 Hoang Nguyen
+
