@@ -3,7 +3,7 @@
 **A constraint-based contract language for disciplined AI-assisted engineering**
 
 Version: 0.2  
-Status: Active research project
+Status: **Experimental** — interfaces and behavior may change as the project evolves
 
 ---
 
