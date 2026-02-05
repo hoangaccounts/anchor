@@ -199,7 +199,7 @@ Instead of relying on “please behave” prompts, you define a small command su
 
 ### In plain English
 
-AICL is a lightweight way to **put guardrails around AI-assisted work**.
+Anchor is a lightweight way to **put guardrails around AI-assisted work**.
 
 It lets you define:
 - which **commands** exist and what they can do,
@@ -213,7 +213,7 @@ It lets you define:
 
 ## What This Project Is (and Is Not)
 
-AICL is **not** an attempt to fully control or formalize AI behavior in the general case.
+Anchor is **not** an attempt to fully control or formalize AI behavior in the general case.
 
 Through building and using AICL, a few constraints became clear:
 - AI behavior is probabilistic and entropy-driven
@@ -263,6 +263,36 @@ AICL defines a concrete, end-user-authorable contract language with the followin
 - **Outcomes** — Every turn resolves to `ALLOW`, `REFUSE`, or `ERROR`
 
 The full normative specification lives in `aicl-spec.md` (v0.2).
+
+---
+
+### Example: AICL File : Engineering Summary (Render-Locked)
+
+Below is a minimal AICL module that defines a `/summarize()` command with a fixed ASCII header. The runtime computes `{{summary}}` and must emit **only** the template lines when this command runs.
+
+```aicl
+[[MODULE]]
+module_namespace: engineering
+module_version: 0.2
+
+[[COMMAND]]
+command_key: summarize
+emit_output: true
+
+render:
+  template:
+    - "===================="
+    - "ENGINEERING SUMMARY"
+    - "===================="
+    - "{{summary}}"
+
+rules:
+  - when: "conversation_too_short"
+    outcome: "REFUSE"
+    message: "Nothing to summarize yet."
+  - when: "conversation_has_content"
+    outcome: "ALLOW"
+```
 
 ---
 
