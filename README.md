@@ -1,9 +1,40 @@
 # AI Contract Language (AICL)
 
-**A constraint language for reducing recurring AI failure modes**
+**A constraint-based contract language for disciplined AI-assisted engineering**
 
 Version: 0.2  
 Status: Active research project
+
+---
+
+## Quick User Story (30 seconds)
+
+You’re working with an AI assistant on a real codebase.
+
+1. You start in **analysis/design**.
+2. The assistant **jumps to implementation**, changes files you didn’t approve, and invents details.
+3. You correct it… and 10 minutes later it drifts again.
+
+AICL is how you make that workflow **repeatable**:
+
+- You declare what’s allowed *right now* (e.g., “design only; no code”).
+- You declare what state can change (e.g., `phase = design`).
+- Every turn resolves to a simple outcome: **ALLOW / REFUSE / ERROR**.
+- When drift appears, you **re-anchor** by reasserting the contract.
+
+---
+
+### In plain English
+
+AICL is a lightweight way to **put guardrails around AI-assisted work**.
+
+It lets you define:
+
+- what the assistant may do in the current phase (design vs implement),
+- what scope is required for edits,
+- and how violations are handled deterministically.
+
+> In AICL, a “contract” is a declarative bundle of constraints that bounds and re-anchors behavior within a scoped context — not a guarantee of global correctness.
 
 ---
 
@@ -63,7 +94,7 @@ AI: *writes code following DDD patterns*
 **What actually happens:**
 ```
 You: "Let's analyze the requirements for this auth system"
-AI: "Sure! Here's a complete implementation with JWT tokens and a user table..." 
+AI: "Sure! Here's a complete implementation with JWT tokens and a user table..."
     *dumps 200 lines of code*
 You: "Stop. I didn't ask for code. We haven't designed anything yet."
 AI: "You're right! Let me refactor this to use clean architecture..."
@@ -95,7 +126,7 @@ Determinism here is **scoped and contextual**, not absolute.
 
 AICL is being explored along two parallel tracks:
 
-### 1. AI Smells
+### 1) AI Smells
 
 A catalog of recurring failure modes observed during real LLM-assisted engineering work, such as:
 
@@ -106,10 +137,10 @@ A catalog of recurring failure modes observed during real LLM-assisted engineeri
 - Over-helpfulness
 - Render leakage
 
-The smell catalog itself lives in a separate repository:  
-👉 https://github.com/hoangaccounts/ai-smells
+The smell catalog lives in a separate repository:  
+https://github.com/hoangaccounts/ai-smells
 
-### 2. Constraint Libraries
+### 2) Constraint Libraries
 
 Reusable AICL modules designed to counter specific smells.
 
@@ -118,6 +149,59 @@ These libraries are:
 - loaded selectively, not globally
 - used to re-anchor behavior when drift appears
 - designed to reduce repeated negotiation
+
+---
+
+## Minimal example (v0.2 shape)
+
+```yaml
+[[MODULE]]
+module_name: engineering_workflow
+module_version: "0.2"
+module_namespace: eng
+description: "Example module"
+
+[[CONTRACT]]
+contract_id: phase_gate
+version: "0.2"
+rules:
+  - rule_id: "require_scope_for_edits"
+    effect: "REQUIRE"
+    action_id: "EDIT_EXISTING_ARTIFACT"
+    target: null
+    scope_required: true
+updates:
+  - update_id: "set_phase"
+    update_key: "phase"
+    args_schema:
+      value: string
+    effects:
+      active_profiles: ["{value}"]
+metadata:
+  autoload: true
+[[/CONTRACT]]
+
+[[COMMAND]]
+command_id: eng.status
+command_key: status
+args_schema:
+  summary: bool
+result_schema:
+  phase: string
+effects:
+  - read_state:
+      paths: ["active_profiles"]
+render:
+  format: "text"
+[[/COMMAND]]
+
+[[/MODULE]]
+```
+
+```
+/phase = design
+/status(summary: true)
+```
 
 ---
 
@@ -131,18 +215,11 @@ AICL defines a concrete, end-user-authorable contract language with the followin
 - **Actions** — Explicitly declared operations (read-only or mutating)
 - **StateUpdates (UpdateKeys)** — Deterministic, side-effect-free state mutations
 - **Commands** — First-class objects invoked via strict syntax
+- **Policy** — A derived, conflict-checked view of all active rules
 - **Scope** — Machine-checkable bounds required for mutating actions
 - **Outcomes** — Every turn resolves to exactly one of `ALLOW`, `REFUSE`, or `ERROR`
 
 The full normative specification lives in `aicl-spec-v0.2.md`.
-
----
-
-## Philosophy
-
-AICL treats AI assistance as **infrastructure**, not conversation.
-
-Just as we do not configure databases or deploy systems via prose, AICL explores what it means to apply **explicit structure and constraints** to AI-assisted workflows—while accepting that entropy and interpretation are unavoidable parts of the system.
 
 ---
 
