@@ -3,10 +3,7 @@ layout: default
 title: Anchor
 ---
 
-<div style="margin: 0 0 1.25rem 0; padding: 0.9rem 1rem; border: 1px solid #d0d7de; border-radius: 8px; background: #f6f8fa;">
-  <strong>Repository:</strong>
-  <a href="https://github.com/hoangaccounts/anchor">github.com/hoangaccounts/anchor</a>
-</div>
+# Anchor
 
 **Structured protocols for disciplined, repeatable AI-assisted work**
 
